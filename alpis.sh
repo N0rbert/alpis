@@ -416,25 +416,47 @@ apt-get install -y htop mc ncdu aptitude synaptic synaptic-usermode eepm apf men
 # Kate text editor
 apt-get install -y kde5-kate kde5-profile
 
-# Meld 1.5.3 as in https://askubuntu.com/a/965151/66509
-apt-get install -y dpkg rpm-build-python3 rpm-build-python libnumpy python python-module-numpy python-module-pycairo python-module-pygobject python-module-pygtk python-modules python-modules-bsddb python-modules-compiler python-modules-ctypes python-modules-curses python-modules-email python-modules-encodings python-modules-hotshot python-modules-logging python-modules-multiprocessing python-modules-unittest python-modules-xml python-strict
+# Meld 1.5.3 as in https://askubuntu.com/a/965151/66509 with workaround for https://bugzilla.altlinux.org/44923
+apt-get install -y etersoft-build-utils intltool rpm-build-python3 rpm-build-python libnumpy python python-module-numpy python-module-pycairo python-module-pygobject python-module-pygtk python-modules python-modules-bsddb python-modules-compiler python-modules-ctypes python-modules-curses python-modules-email python-modules-encodings python-modules-hotshot python-modules-logging python-modules-multiprocessing python-modules-unittest python-modules-xml python-strict rpm-build-licenses python-devel scrollkeeper python-module-pygtksourceview python-module-pygtk-libglade
+
+if [ $is_docker == 1 ]; then
+  if [ -z "$SUDO_USER" ]; then
+    SUDO_USER=temp_user
+    useradd $SUDO_USER || true
+  fi
+fi
+
+su -l $SUDO_USER -c "mkdir -p /home/$SUDO_USER/RPM/SOURCES"
+
 cd /tmp
-wget -c http://old-releases.ubuntu.com/ubuntu/pool/universe/m/meld/meld_1.5.3-1ubuntu1_all.deb
-rm -rvf /tmp/meld-tmp
-dpkg-deb -R meld_1.5.3-1ubuntu1_all.deb meld-tmp
-sed -i "s|/usr/bin/python$|/usr/bin/python2|" meld-tmp/usr/bin/meld
-dpkg-deb -b meld-tmp meld_1.5.3-1ubuntu1py2_all.deb
+rm -rf /tmp/meld
+su -l $SUDO_USER -c "git clone https://git.altlinux.org/srpms/m/meld.git -b 1.5.3-alt1 /tmp/meld"
+cd meld
 
-# workaround for https://bugzilla.altlinux.org/43442
-cat <<EOF | tee -a /var/lib/preferences
-Package: meld
-Pin: version 1.5.3-alt1.repacked.with.epm.2
-Pin-Priority: 1001
+curr_ver=$(grep "define ver_major" meld.spec | awk '{print $NF}')
+new_ver=9.99.3really$curr_ver
+sub_ver=$(grep Version meld.spec | awk -F. '{print $NF}')
+sed -i "s/define ver_major $curr_ver/define ver_major $new_ver/" meld.spec
+sed -i "s/gtksourceview/gtksourceview2/" meld.spec
+sed -i "s/%gpl2plus/GPL-2.0-or-later/" meld.spec
+sed -i "s/python$/python2/" meld/INSTALL
+sed -i "s|/usr/bin/env python$|/usr/bin/env python2|" meld/bin/meld meld/tools/check_release meld/tools/install_paths meld/tools/make_release
+rm -rf .git
+mv meld "meld-$new_ver.3"
+su -l $SUDO_USER -c "cd /tmp/meld && tar -cJf meld-$new_ver.$sub_ver.tar.xz meld-$new_ver.$sub_ver/ && cp -v /tmp/meld/meld-$new_ver.$sub_ver.tar.xz /home/$SUDO_USER/RPM/SOURCES/"
 
-EOF
-ln -sf /var/lib/preferences /etc/apt/preferences.d/synaptic
+su -l $SUDO_USER -c "rpmbb /tmp/meld/meld.spec"
 
-epm install -y --repack meld_1.5.3-1ubuntu1py2_all.deb
+apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*meld*"$new_ver"."$sub_ver"*.rpm || true
+apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*meld*"$new_ver"."$sub_ver"*.rpm
+
+if [ $is_docker == 1 ]; then
+  if [ "$SUDO_USER" == "temp_user" ]; then
+    unset SUDO_USER
+    userdel -r -f temp_user
+  fi
+fi
+#/meld
 
 # VirtualBox
 apt-get install -y virtualbox virtualbox-guest-additions virtualbox-doc
@@ -462,7 +484,10 @@ apt-get install -y libpq5 libsqlite sqlite R-base R-devel R-doc-html
 
 cd /tmp
 wget -c https://s3.amazonaws.com/rstudio-ide-build/desktop/opensuse15/x86_64/rstudio-2021.09.3-396-x86_64.rpm
+
+rm -fv /etc/eepm/repack.d/rstudio.sh || true # hack: forget about RStudio in modern versions of eepm (>3.27.0-alt1)
 epm install -y --repack /tmp/rstudio-2021.09.3-396-x86_64.rpm
+apt-get install --reinstall -y eepm
 
 ln -sf /usr/lib/rstudio/bin/rstudio /usr/local/bin/rstudio
 
