@@ -34,8 +34,35 @@ echo "Welcome to the ALT Linux post-install script!"
 set -e
 set -x
 
+# Install updates
+rm -vrf /var/lib/apt/lists/*
+mkdir -p /var/lib/apt/lists/partial
+apt-get update
+apt-get dist-upgrade --force-yes -y
+apt-get install -f -y
+
+if [ $is_docker == 0 ]; then
+  update-kernel -a -f
+fi
+
+# add rpm-src
+apt-get install -y apt-repo
+apt-repo add "$(apt-repo | grep branch | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/debuginfo//g' | sort -u | head -n1)"
+apt-repo add "$(apt-repo | grep branch | grep 'noarch ' | sed 's/^rpm /rpm-src /' | sort -u | head -n1)"
+
+# add Autoimports
+apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
+apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
+apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
+apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
+
+apt-get update
+
 # Configure MATE desktop
 if [[ $is_docker == 0 && "$DESKTOP_SESSION" == "mate" ]]; then
+## install MATE applets for Panel
+apt-get install -y mate-applets
+
 ## keyboard layouts, Alt+Shift for layout toggle
 sudo -EHu "$SUDO_USER" -- gsettings set org.mate.peripherals-keyboard-xkb.kbd layouts "['us', 'ru']"
 sudo -EHu "$SUDO_USER" -- gsettings set org.mate.peripherals-keyboard-xkb.kbd model "''"
@@ -208,30 +235,6 @@ fi
 
 fi # (is_docker && MATE)?
 
-# Install updates
-rm -vrf /var/lib/apt/lists/*
-mkdir -p /var/lib/apt/lists/partial
-apt-get update
-apt-get dist-upgrade --force-yes -y
-apt-get install -f -y
-
-if [ $is_docker == 0 ]; then
-  update-kernel -a -f
-fi
-
-# add rpm-src
-apt-get install -y apt-repo
-apt-repo add "$(apt-repo | grep branch | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/debuginfo//g' | sort -u | head -n1)"
-apt-repo add "$(apt-repo | grep branch | grep 'noarch ' | sed 's/^rpm /rpm-src /' | sort -u | head -n1)"
-
-# add Autoimports
-apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
-apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
-apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
-apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
-
-apt-get update
-
 # temporary fix for https://bugzilla.altlinux.org/43236
 cat << \EOF > /etc/profile.d/mate.sh
 if [ "$DESKTOP_SESSION" == "mate" ]; then
@@ -249,7 +252,7 @@ fi
 EOF
 chmod +x /etc/profile.d/mate.sh
 
-# temporarary fix for p10 - https://bugzilla.altlinux.org/43443
+# temporary fix for p10 - https://bugzilla.altlinux.org/43443
 if [ "$ver" == "p10" ]; then
   ln -sf /usr/bin/mate-volume-control-status-icon /usr/local/bin/mate-volume-control-applet
 fi
