@@ -87,6 +87,8 @@ sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.workspace-names name-4 "'
 ## Pluma
 sudo -EHu "$SUDO_USER" -- gsettings set org.mate.pluma display-line-numbers true
 sudo -EHu "$SUDO_USER" -- gsettings set org.mate.pluma highlight-current-line true
+sudo -EHu "$SUDO_USER" -- gsettings set org.mate.pluma auto-detected-encodings "['UTF-8', 'GBK', 'CURRENT', 'ISO-8859-15', 'UTF-16', 'WINDOWS-1251']"
+
 
 ## terminal
 sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.global-keybindings run-command-terminal "'<Primary><Alt>t'"
