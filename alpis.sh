@@ -530,7 +530,7 @@ wget -c $LATEST_PANDOC_DEB_URL;
 epm install -y --repack /tmp/pandoc-2.16.1-1-amd64.deb
 
 # bookdown install for local user
-apt-get install -y rpm-build libssl-devel libcurl-devel libxml2-devel libcairo-devel gcc gcc-c++ libfribidi-devel libtiff-devel libjpeg-devel
+apt-get install -y rpm-build libssl-devel libcurl-devel libxml2-devel libcairo-devel gcc gcc-c++ libfribidi-devel libtiff-devel libjpeg-devel libgit2-devel
 apt-get install -y evince
 
 if [ "$ver" == "p9" ]; then
@@ -542,23 +542,23 @@ fi
 
 if [ $is_docker == 0 ]; then
 	su -l $SUDO_USER -c "mkdir -p /home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver"
-	su -l $SUDO_USER -c "R -e \"install.packages(c('devtools','tikzDevice'), repos='http://cran.rstudio.com/', lib='/home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver')\""
+	su -l $SUDO_USER -c "R -e \"install.packages(c('devtools','tikzDevice'), repos='http://cran.r-project.org/', lib='/home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver')\""
 
 		## FIXME on bookdown side, waiting for 0.23
-		su -l $SUDO_USER -c "R -e \"require(devtools); install_version('bookdown', version = '0.21', repos = 'http://cran.rstudio.com')\""
+		su -l $SUDO_USER -c "R -e \"require(devtools); install_version('bookdown', version = '0.21', repos = 'http://cran.r-project.org')\""
 		## FIXME for is_abs_path on knitr 1.34
-		su -l $SUDO_USER -c "R -e \"require(devtools); install_version('knitr', version = '1.33', repos = 'http://cran.rstudio.com')\""
+		su -l $SUDO_USER -c "R -e \"require(devtools); install_version('knitr', version = '1.33', repos = 'http://cran.r-project.org')\""
 		## Xaringan
-		su -l $SUDO_USER -c "R -e \"install.packages('xaringan', repos='http://cran.rstudio.com/')\""
+		su -l $SUDO_USER -c "R -e \"install.packages('xaringan', repos='http://cran.r-project.org')\""
 else
-	R -e "install.packages(c('devtools','tikzDevice'), repos='http://cran.rstudio.com/')"
+	R -e "install.packages(c('devtools','tikzDevice'), repos='http://cran.r-project.org')"
 
 	## FIXME on bookdown side, waiting for 0.23
-	R -e "require(devtools); install_version('bookdown', version = '0.21', repos = 'http://cran.rstudio.com')"
+	R -e "require(devtools); install_version('bookdown', version = '0.21', repos = 'http://cran.r-project.org')"
 	## FIXME for is_abs_path on knitr 1.34
-	R -e "require(devtools); install_version('knitr', version = '1.33', repos = 'http://cran.rstudio.com')"
+	R -e "require(devtools); install_version('knitr', version = '1.33', repos = 'http://cran.r-project.org')"
 	## Xaringan
-	R -e "install.packages('xaringan', repos='http://cran.rstudio.com/')"
+	R -e "install.packages('xaringan', repos='http://cran.r-project.org')"
 fi
 
 # TexLive and fonts
@@ -644,6 +644,8 @@ EOF
 fi
 
 # Cleaning up
+## fix for https://forum.altlinux.org/index.php?topic=47299
+apt-mark manual sudo
 apt-get autoremove -y
 
 apt-get install -y apt-scripts
