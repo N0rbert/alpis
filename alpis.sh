@@ -610,7 +610,7 @@ fi
 # Squid-deb-proxy auto-detect as in https://forum.altlinux.org/index.php?topic=46596
 if [ $is_docker == 0 ]; then
   cd /tmp
-  wget -c http://deb.debian.org/debian/pool/main/s/squid-deb-proxy/squid-deb-proxy-client_0.8.14+nmu2_all.deb
+  wget -c http://mirror.yandex.ru/debian/pool/main/s/squid-deb-proxy/squid-deb-proxy-client_0.8.14+nmu2_all.deb
   apt-get install -y rpm-build-python python-base
   epm install -y --repack ./squid-deb-proxy-client_0.8.14+nmu2_all.deb
 
@@ -653,19 +653,24 @@ apt-get dedup -y
 
 #remove-old-kernels -y
 
-## Arduino from official site, Fritzing from repo
+## Arduino from official site on p9, Fritzing from repo
 if [ $is_docker == 0 ]; then
 	usermod -a -G dialout $SUDO_USER
 	usermod -a -G uucp $SUDO_USER
 fi
-cd /tmp
-wget -c https://downloads.arduino.cc/arduino-1.8.19-linux64.tar.xz
-cd /opt
-tar -xf /tmp/arduino-1.8.19-linux64.tar.xz
-cd arduino-1.8.19
-./install.sh
 
-rm -vf /home/*/Desktop/arduino-arduinoide.desktop /root/Desktop/arduino-arduinoide.desktop /home/*/Рабочий\ стол/arduino-arduinoide.desktop || true
+if [ "$ver" == "p9" ]; then
+	cd /tmp
+	wget -c https://downloads.arduino.cc/arduino-1.8.19-linux64.tar.xz
+	cd /opt
+	tar -xf /tmp/arduino-1.8.19-linux64.tar.xz
+	cd arduino-1.8.19
+	./install.sh
+
+	rm -vf /home/*/Desktop/arduino-arduinoide.desktop /root/Desktop/arduino-arduinoide.desktop /home/*/Рабочий\ стол/arduino-arduinoide.desktop || true
+elif [ "$ver" == "p10" ]; then
+	apt-get install -y arduino
+fi
 
 apt-get install -y fritzing
 
