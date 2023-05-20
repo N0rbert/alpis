@@ -372,6 +372,9 @@ apt-get install -y wget
 # Git
 apt-get install -y git
 
+# GVFS backends for Caja and others
+apt-get install -y gvfs-backends
+
 # RabbitVCS integration to Caja
 if [ "$ver" == "p9" ]; then
     apt-get install -y python-module-caja python-module-dbus python-module-pysvn python-module-dulwich python-module-pygobject3 python-module-configobj python-module-simplejson python-modules-tkinter python-module-setuptools git mercurial subversion
@@ -583,7 +586,7 @@ else
 fi
 
 # PlayOnLinux
-apt-get install -y playonlinux
+apt-get install -y i586-libGL i586-xorg-dri-swrast i586-wine curl p7zip playonlinux
 
 # Telegram
 apt-get install -y telegram-desktop
