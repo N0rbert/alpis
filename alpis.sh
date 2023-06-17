@@ -264,7 +264,7 @@ apt-get remove -y acpid-events-power
 
 # temporary fix for p10 - https://bugzilla.altlinux.org/43403
 if [ "$ver" == "p10" ]; then
-  apt-get install -y su git etersoft-build-utils rpm-build-vala rpm-build-gir gcc-c++ gperf libncurses-devel libcairo-devel intltool gtk-doc libgio-devel libgtk+3-devel libpango-devel libgnutls-devel vala-tools libvala-devel libpcre2-devel libgladeui2.0-devel gobject-introspection-devel libgtk+3-gir-devel 
+  apt-get install -y su git etersoft-build-utils rpm-build-vala rpm-build-gir gcc-c++ gperf libncurses-devel libcairo-devel intltool gtk-doc libgio-devel libgtk+3-devel libpango-devel libgnutls-devel vala-tools libvala-devel libpcre2-devel libgladeui2.0-devel gobject-introspection-devel libgtk+3-gir-devel gear
 
   if [ $is_docker == 1 ]; then
     if [ -z "$SUDO_USER" ]; then
