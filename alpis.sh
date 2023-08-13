@@ -540,7 +540,7 @@ if [ "$ver" == "p9" ]; then
     r_ver="3.6"
 fi
 if [ "$ver" == "p10" ]; then
-    r_ver="4.0"
+    r_ver="4.1"
 fi
 
 if [ $is_docker == 0 ]; then
