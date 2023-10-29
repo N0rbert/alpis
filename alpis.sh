@@ -586,7 +586,7 @@ else
 fi
 
 # PlayOnLinux
-apt-get install -y i586-libGL i586-xorg-dri-swrast i586-wine curl p7zip playonlinux
+apt-get install -y i586-libGL i586-xorg-dri-swrast i586-wine curl p7zip playonlinux winetricks
 
 # Telegram
 apt-get install -y telegram-desktop
