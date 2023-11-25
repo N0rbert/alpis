@@ -49,6 +49,8 @@ fi
 apt-get install -y apt-repo
 apt-repo add "$(apt-repo | grep branch | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/debuginfo//g' | sort -u | head -n1)"
 apt-repo add "$(apt-repo | grep branch | grep 'noarch ' | sed 's/^rpm /rpm-src /' | sort -u | head -n1)"
+## temporary fix for https://bugzilla.altlinux.org/48551
+sed -i "s|pub distributions/ALTLinux|pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 
 # add Autoimports
 apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
@@ -299,6 +301,22 @@ if [ "$ver" == "p10" ]; then
     if [ "$SUDO_USER" == "temp_user" ]; then
 	    unset SUDO_USER
 	    userdel -r -f temp_user
+    fi
+  fi
+
+  ## recompile xfce4-terminal and reinstall it to work with patched libvte
+  if [[ $is_docker == 0 && "$DESKTOP_SESSION" == "xfce" ]]; then
+    if [ "$ver" == "p10" ]; then
+      apt-get install -y su etersoft-build-utils rpm-build-xfce4 xfce4-dev-tools libxfconf-devel libxfce4ui-gtk3-devel libpcre2-devel docbook-dtds docbook-style-xsl intltool libvte3-devel xsltproc
+      cd /tmp
+      apt-get source xfce4-terminal
+      su -l $SUDO_USER -c "rpm -i /tmp/xfce4-terminal-*.src.rpm"
+      su -l $SUDO_USER -c "rpmbb /home/$SUDO_USER/RPM/SPECS/xfce4-terminal.spec"
+      rm -v /home/$SUDO_USER/RPM/RPMS/*/*xfce4-terminal*debuginfo*.rpm
+      apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/x86_64/xfce4-terminal-*.rpm || true
+      apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/x86_64/xfce4-terminal-*.rpm
+
+      apt-get install -y --reinstall xfce4-default
     fi
   fi
 fi #/bug 43403
@@ -568,6 +586,9 @@ fi
 
 apt-get install -y texlive-extra-utils biber texlive-lang-cyrillic texlive-xetex texlive-fonts-extra texlive-science font-manager texlive-latex-extra fonts-ttf-ms
 apt-get install -y alien dpkg
+
+# Atril with epub support
+apt-get install -y libmate-document-viewer mate-document-viewer
 
 ## get fonts-cmu from Debian
 cd /tmp
