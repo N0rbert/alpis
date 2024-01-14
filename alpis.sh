@@ -488,6 +488,7 @@ fi
 apt-get install -y virtualbox virtualbox-guest-additions virtualbox-doc
 vbox_version=$(rpm -qa 2>/dev/null | grep -E "^virtualbox\-(5|6|7)" | awk -F'-' '{print $2}')
 
+# NOTE: seems to be better than "epm play virtualbox-extpack" as we get VBox GA ISO too for the same version
 if [ -n "$vbox_version" ]; then
   rm -v /usr/share/virtualbox/VBoxGuestAdditions.iso || true
   wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso" -O /usr/share/virtualbox/VBoxGuestAdditions.iso || true
@@ -607,7 +608,7 @@ else
 fi
 
 # PlayOnLinux
-apt-get install -y i586-libGL i586-xorg-dri-swrast i586-wine curl p7zip playonlinux winetricks
+apt-get install -y i586-libGL i586-xorg-dri-{intel,nouveau,radeon,swrast} i586-libncurses i586-libunixODBC2 i586-wine curl p7zip playonlinux winetricks
 
 # Telegram
 apt-get install -y telegram-desktop
@@ -616,8 +617,8 @@ apt-get install -y telegram-desktop
 apt-get install -y notepadqq
 
 # Flatpak
-apt-get install -y flatpak
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+apt-get install -y flatpak flatpak-repo-flathub
+control fusermount wheelonly
 if [ "$ver" == "p9" ]; then
     chmod a+x /etc/profile.d/flatpak.sh || true
 fi
@@ -626,10 +627,13 @@ fi
 if [ $is_docker == 0 ]; then
     if [ "$ver" == "p10" ]; then
         apt-get install -y snapd
-        systemctl enable snapd.service
-        systemctl start snapd.service
+        ln -sf /var/lib/snapd/snap /snap
+        systemctl enable --now snapd.service
     fi
 fi
+
+# AppImage
+control fusermount public
 
 # Squid-deb-proxy auto-detect as in https://forum.altlinux.org/index.php?topic=46596
 if [ $is_docker == 0 ]; then
