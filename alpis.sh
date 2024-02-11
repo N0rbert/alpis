@@ -562,25 +562,24 @@ if [ "$ver" == "p10" ]; then
     r_ver="4.1"
 fi
 
+## install R-packages with specific versions for reproducibility
+bookdown_ver="0.37"
+knitr_ver="1.45"
+xaringan_ver="0.29"
+
 if [ $is_docker == 0 ]; then
 	su -l $SUDO_USER -c "mkdir -p /home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver"
-	su -l $SUDO_USER -c "R -e \"install.packages(c('devtools','tikzDevice'), repos='http://cran.r-project.org/', lib='/home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver')\""
+    su -l $SUDO_USER -c "R -e \"install.packages(c('devtools','tikzDevice'), repos='http://cran.r-project.org/', lib='/home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver')\""
 
-		## FIXME on bookdown side, waiting for 0.23
-		su -l $SUDO_USER -c "R -e \"require(devtools); install_version('bookdown', version = '0.21', repos = 'http://cran.r-project.org')\""
-		## FIXME for is_abs_path on knitr 1.34
-		su -l $SUDO_USER -c "R -e \"require(devtools); install_version('knitr', version = '1.33', repos = 'http://cran.r-project.org')\""
-		## Xaringan
-		su -l $SUDO_USER -c "R -e \"install.packages('xaringan', repos='http://cran.r-project.org')\""
+    su -l $SUDO_USER -c "R -e \"require(devtools); install_version('bookdown', version = '$bookdown_ver', repos = 'http://cran.r-project.org')\""
+	su -l $SUDO_USER -c "R -e \"require(devtools); install_version('knitr', version = '$knitr_ver', repos = 'http://cran.r-project.org')\""
+	su -l $SUDO_USER -c "R -e \"require(devtools); install_version('xaringan', version = '$xaringan_ver', repos = 'http://cran.r-project.org/')\""
 else
 	R -e "install.packages(c('devtools','tikzDevice'), repos='http://cran.r-project.org')"
 
-	## FIXME on bookdown side, waiting for 0.23
-	R -e "require(devtools); install_version('bookdown', version = '0.21', repos = 'http://cran.r-project.org')"
-	## FIXME for is_abs_path on knitr 1.34
-	R -e "require(devtools); install_version('knitr', version = '1.33', repos = 'http://cran.r-project.org')"
-	## Xaringan
-	R -e "install.packages('xaringan', repos='http://cran.r-project.org')"
+	R -e "require(devtools); install_version('bookdown', version = '$bookdown_ver', repos = 'http://cran.r-project.org')"
+	R -e "require(devtools); install_version('knitr', version = '$knitr_ver', repos = 'http://cran.r-project.org')"
+	R -e "require(devtools); install_version('xaringan', version = '$xaringan_ver', repos = 'http://cran.r-project.org/')"
 fi
 
 # TexLive and fonts
