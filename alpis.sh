@@ -610,7 +610,11 @@ fi
 apt-get install -y i586-libGL i586-xorg-dri-{intel,nouveau,radeon,swrast} i586-libncurses i586-libunixODBC2 i586-wine curl p7zip playonlinux winetricks
 
 # Telegram
-apt-get install -y telegram-desktop
+if [ "$ver" == "p9" ]; then
+  apt-get install -y telegram-desktop
+elif [ "$ver" == "p10" ]; then
+  epm play telegram
+fi
 
 # NotepadQQ
 apt-get install -y notepadqq
