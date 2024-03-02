@@ -620,7 +620,8 @@ fi
 apt-get install -y notepadqq
 
 # Flatpak
-apt-get install -y flatpak flatpak-repo-flathub
+apt-get install -y flatpak
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 control fusermount wheelonly
 if [ "$ver" == "p9" ]; then
     chmod a+x /etc/profile.d/flatpak.sh || true
