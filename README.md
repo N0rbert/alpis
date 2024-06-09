@@ -1,7 +1,7 @@
 # alpis
 
 This is ALT Linux post-install script for my personal needs.  
-Currently it supports *p9* and *p10* branches with MATE desktop (Workstation and MATE StarterKit) and Xfce (Simply Linux).
+Currently it supports *p9*, *p10* and *p11* branches with MATE desktop (Workstation and MATE StarterKit) and Xfce (Simply Linux).
 
 Dependencies: `sudo` enabled using `su -l -c "usermod -a -G wheel $USER; control sudo wheelonly; control sudoers relaxed; control sudoreplay wheelonly; control sudowheel enabled;"` (as in SimplyLinux) and `lsb-release` [package](https://packages.altlinux.org/en/sisyphus/srpms/lsb-release/) installed, *tmpfs* > 2 Gb (or disabled in `/etc/fstab`).
 

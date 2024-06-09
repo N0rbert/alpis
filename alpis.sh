@@ -1,15 +1,18 @@
 #!/bin/bash
 # ALT Linux post install script
 
-if lsb_release -cs | grep -qE "Destiny|CaptainFinn|Laertes|Hypericum|Autolycus"; then
+if lsb_release -cs | grep -qE "Destiny|CaptainFinn|Laertes|Hypericum|Autolycus|Salvia"; then
 	if lsb_release -d | grep -qE "p9|9\."; then
         ver=p9
 	fi
     if lsb_release -d | grep -qE "p10|10\."; then
         ver=p10
     fi
+    if lsb_release -d | grep -qE "p11|11\."; then
+        ver=p11
+    fi
 else
-    echo "Currently only ALT Linux p9 and p10 - SimplyLinux, Workstation and StarterKit MATE are supported!"
+    echo "Currently only ALT Linux p9, p10 and p11 - SimplyLinux, Workstation and StarterKit MATE are supported!"
     exit 1
 fi
 
@@ -53,10 +56,12 @@ apt-repo add "$(apt-repo | grep branch | grep 'noarch ' | sed 's/^rpm /rpm-src /
 sed -i "s|pub distributions/ALTLinux|pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 
 # add Autoimports
-apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
-apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
-apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
-apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
+if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+  apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
+  apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
+  apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
+  apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
+fi
 
 apt-get update
 
@@ -223,7 +228,7 @@ sudo -EHu "$SUDO_USER" -- dconf load /org/mate/panel/ < /tmp/dconf-mate-panel
 
 
 ## window management keyboard shortcuts for Ubuntu MATE 18.04 LTS
-if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
     sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.window-keybindings unmaximize '<Mod4>Down'
     sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.window-keybindings maximize '<Mod4>Up'
     sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.window-keybindings tile-to-corner-ne '<Alt><Mod4>Right'
@@ -256,8 +261,8 @@ fi
 EOF
 chmod +x /etc/profile.d/mate.sh
 
-# temporary fix for p10 - https://bugzilla.altlinux.org/43443
-if [ "$ver" == "p10" ]; then
+# temporary fix for p10 and p11 - https://bugzilla.altlinux.org/43443
+if [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
   ln -sf /usr/bin/mate-volume-control-status-icon /usr/local/bin/mate-volume-control-applet
 fi
 
@@ -290,6 +295,7 @@ if [ "$ver" == "p10" ]; then
   rm -rf .git
   mv vte "vte-$new_ver.3"
   su -l $SUDO_USER -c "cd /tmp/vte3 && tar -cJf vte-$new_ver.$sub_ver.tar.xz vte-$new_ver.$sub_ver/ && cp -v /tmp/vte3/vte-$new_ver.$sub_ver.tar.xz /home/$SUDO_USER/RPM/SOURCES/"
+  chown -R $SUDO_USER: "/home/$SUDO_USER/RPM"
 
   su -l $SUDO_USER -c "rpmbb /tmp/vte3/vte3.spec"
 
@@ -321,9 +327,9 @@ if [ "$ver" == "p10" ]; then
   fi
 fi #/bug 43403
 
-# temporarary fix for p9, p10 - https://bugzilla.altlinux.org/44100
+# temporarary fix for p9, p10 and p11 - https://bugzilla.altlinux.org/44100
 if [ "$DESKTOP_SESSION" == "mate" ]; then
- if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+ if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
   apt-get install -y su etersoft-build-utils mate-common gtk-doc libSM-devel libXi-devel libXrandr-devel libdbus-glib-devel libdconf-devel libmateweather-devel librsvg-devel libwnck3-devel mate-desktop-devel mate-menus-devel yelp-tools libgtk-layer-shell-devel
   
   if [ $is_docker == 1 ]; then
@@ -395,32 +401,29 @@ apt-get install -y gvfs-backends
 
 # RabbitVCS integration to Caja
 if [ "$ver" == "p9" ]; then
-    apt-get install -y python-module-caja python-module-dbus python-module-pysvn python-module-dulwich python-module-pygobject3 python-module-configobj python-module-simplejson python-modules-tkinter python-module-setuptools git mercurial subversion
-    rvcs_ver=0.16
-    python_exe=python
-fi
-if [ "$ver" == "p10" ]; then
-    apt-get install -y python3-module-caja python3-module-dbus python3-module-pysvn python3-module-dulwich python3-module-pygobject3 python3-module-configobj python3-module-simplejson python3-modules-tkinter python3-module-setuptools git mercurial subversion
-    rvcs_ver=0.18
-    python_exe=python3
-fi
+  apt-get install -y python-module-caja python-module-dbus python-module-pysvn python-module-dulwich python-module-pygobject3 python-module-configobj python-module-simplejson python-modules-tkinter python-module-setuptools git mercurial subversion
+  rvcs_ver=0.16
+  python_exe=python
 
-cd /tmp
-wget -c https://github.com/rabbitvcs/rabbitvcs/archive/refs/tags/v${rvcs_ver}.tar.gz
-rm -rf cd rabbitvcs-${rvcs_ver}/ 
-tar -xf v${rvcs_ver}.tar.gz
-cd rabbitvcs-${rvcs_ver}/
-${python_exe} setup.py build
-${python_exe} setup.py install --prefix=/usr
-cp -avfr clients/cli/rabbitvcs /usr/local/bin/
+  cd /tmp
+  wget -c https://github.com/rabbitvcs/rabbitvcs/archive/refs/tags/v${rvcs_ver}.tar.gz
+  rm -rf cd rabbitvcs-${rvcs_ver}/ 
+  tar -xf v${rvcs_ver}.tar.gz
+  cd rabbitvcs-${rvcs_ver}/
+  ${python_exe} setup.py build
+  ${python_exe} setup.py install --prefix=/usr
+  cp -avfr clients/cli/rabbitvcs /usr/local/bin/
 
-if [ $is_docker == 0 ]; then
-	sudo -u $SUDO_USER -- mkdir -p ~/.local/share/caja-python/extensions
-	sudo -u $SUDO_USER -- cp -avfr /tmp/rabbitvcs-${rvcs_ver}/clients/caja/RabbitVCS.py ~/.local/share/caja-python/extensions/
-else
-	mkdir -p /usr/local/share/caja-python/extensions
-	cp -avfr /tmp/rabbitvcs-${rvcs_ver}/clients/caja/RabbitVCS.py /usr/local/share/caja-python/extensions/
-fi
+  if [ $is_docker == 0 ]; then
+    sudo -u $SUDO_USER -- mkdir -p ~/.local/share/caja-python/extensions
+    sudo -u $SUDO_USER -- cp -avfr /tmp/rabbitvcs-${rvcs_ver}/clients/caja/RabbitVCS.py ~/.local/share/caja-python/extensions/
+  else
+    mkdir -p /usr/local/share/caja-python/extensions
+    cp -avfr /tmp/rabbitvcs-${rvcs_ver}/clients/caja/RabbitVCS.py /usr/local/share/caja-python/extensions/
+  fi
+elif [[ "$ver" == "p10" || "$ver" == "p11" ]]; then # bug https://bugs.altlinux.org/30354 is fixed, so using rpm-packages here
+  apt-get install -y rabbitvcs-caja
+fi #/rabbitvcs for Caja
 
 # GIMP
 apt-get install -y gimp
@@ -443,44 +446,48 @@ apt-get install -y htop mc ncdu aptitude synaptic synaptic-usermode eepm apf men
 apt-get install -y kde5-kate kde5-profile
 
 # Meld 1.5.3 as in https://askubuntu.com/a/965151/66509 with workaround for https://bugzilla.altlinux.org/44923
-apt-get install -y etersoft-build-utils intltool rpm-build-python3 rpm-build-python libnumpy python python-module-numpy python-module-pycairo python-module-pygobject python-module-pygtk python-modules python-modules-bsddb python-modules-compiler python-modules-ctypes python-modules-curses python-modules-email python-modules-encodings python-modules-hotshot python-modules-logging python-modules-multiprocessing python-modules-unittest python-modules-xml python-strict rpm-build-licenses python-devel scrollkeeper python-module-pygtksourceview python-module-pygtk-libglade
+if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+  apt-get install -y etersoft-build-utils intltool rpm-build-python3 rpm-build-python libnumpy python python-module-numpy python-module-pycairo python-module-pygobject python-module-pygtk python-modules python-modules-bsddb python-modules-compiler python-modules-ctypes python-modules-curses python-modules-email python-modules-encodings python-modules-hotshot python-modules-logging python-modules-multiprocessing python-modules-unittest python-modules-xml python-strict rpm-build-licenses python-devel scrollkeeper python-module-pygtksourceview python-module-pygtk-libglade
 
-if [ $is_docker == 1 ]; then
-  if [ -z "$SUDO_USER" ]; then
-    SUDO_USER=temp_user
-    useradd $SUDO_USER || true
+  if [ $is_docker == 1 ]; then
+    if [ -z "$SUDO_USER" ]; then
+      SUDO_USER=temp_user
+      useradd $SUDO_USER || true
+    fi
   fi
-fi
 
-su -l $SUDO_USER -c "mkdir -p /home/$SUDO_USER/RPM/SOURCES"
+  su -l $SUDO_USER -c "mkdir -p /home/$SUDO_USER/RPM/SOURCES"
 
-cd /tmp
-rm -rf /tmp/meld
-su -l $SUDO_USER -c "git clone https://git.altlinux.org/srpms/m/meld.git -b 1.5.3-alt1 /tmp/meld"
-cd meld
+  cd /tmp
+  rm -rf /tmp/meld
+  su -l $SUDO_USER -c "git clone https://git.altlinux.org/srpms/m/meld.git -b 1.5.3-alt1 /tmp/meld"
+  cd meld
 
-curr_ver=$(grep "define ver_major" meld.spec | awk '{print $NF}')
-new_ver=9.99.3really$curr_ver
-sub_ver=$(grep Version meld.spec | awk -F. '{print $NF}')
-sed -i "s/define ver_major $curr_ver/define ver_major $new_ver/" meld.spec
-sed -i "s/gtksourceview/gtksourceview2/" meld.spec
-sed -i "s/%gpl2plus/GPL-2.0-or-later/" meld.spec
-sed -i "s/python$/python2/" meld/INSTALL
-sed -i "s|/usr/bin/env python$|/usr/bin/env python2|" meld/bin/meld meld/tools/check_release meld/tools/install_paths meld/tools/make_release
-rm -rf .git
-mv meld "meld-$new_ver.3"
-su -l $SUDO_USER -c "cd /tmp/meld && tar -cJf meld-$new_ver.$sub_ver.tar.xz meld-$new_ver.$sub_ver/ && cp -v /tmp/meld/meld-$new_ver.$sub_ver.tar.xz /home/$SUDO_USER/RPM/SOURCES/"
+  curr_ver=$(grep "define ver_major" meld.spec | awk '{print $NF}')
+  new_ver=9.99.3really$curr_ver
+  sub_ver=$(grep Version meld.spec | awk -F. '{print $NF}')
+  sed -i "s/define ver_major $curr_ver/define ver_major $new_ver/" meld.spec
+  sed -i "s/gtksourceview/gtksourceview2/" meld.spec
+  sed -i "s/%gpl2plus/GPL-2.0-or-later/" meld.spec
+  sed -i "s/python$/python2/" meld/INSTALL
+  sed -i "s|/usr/bin/env python$|/usr/bin/env python2|" meld/bin/meld meld/tools/check_release meld/tools/install_paths meld/tools/make_release
+  rm -rf .git
+  mv meld "meld-$new_ver.3"
+  su -l $SUDO_USER -c "cd /tmp/meld && tar -cJf meld-$new_ver.$sub_ver.tar.xz meld-$new_ver.$sub_ver/ && cp -v /tmp/meld/meld-$new_ver.$sub_ver.tar.xz /home/$SUDO_USER/RPM/SOURCES/"
 
-su -l $SUDO_USER -c "rpmbb /tmp/meld/meld.spec"
+  su -l $SUDO_USER -c "rpmbb /tmp/meld/meld.spec"
 
-apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*meld*"$new_ver"."$sub_ver"*.rpm || true
-apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*meld*"$new_ver"."$sub_ver"*.rpm
+  apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*meld*"$new_ver"."$sub_ver"*.rpm || true
+  apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*meld*"$new_ver"."$sub_ver"*.rpm
 
-if [ $is_docker == 1 ]; then
-  if [ "$SUDO_USER" == "temp_user" ]; then
-    unset SUDO_USER
-    userdel -r -f temp_user
+  if [ $is_docker == 1 ]; then
+    if [ "$SUDO_USER" == "temp_user" ]; then
+      unset SUDO_USER
+      userdel -r -f temp_user
+    fi
   fi
+elif [ "$ver" == "p11" ]; then
+  apt-get install -y meld
 fi
 #/meld
 
@@ -506,17 +513,35 @@ fi
 # LibreOffice
 apt-get install LibreOffice-still -y
 
-# RStudio for OpenSuSe 15
-apt-get install -y libpq5 libsqlite sqlite R-base R-devel R-doc-html
-
-cd /tmp
-wget -c https://s3.amazonaws.com/rstudio-ide-build/desktop/opensuse15/x86_64/rstudio-2021.09.3-396-x86_64.rpm
+# RStudio
+if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+  apt-get install -y libpq5 libsqlite sqlite R-base R-devel R-doc-html
+elif [ "$ver" == "p11" ]; then
+  apt-get install -y libpq5 libsqlite3-devel R-base R-devel R-doc-html
+fi
 
 rm -fv /etc/eepm/repack.d/rstudio.sh || true # hack: forget about RStudio in modern versions of eepm (>3.27.0-alt1)
-epm install -y --repack /tmp/rstudio-2021.09.3-396-x86_64.rpm
-apt-get install --reinstall -y eepm
 
-ln -sf /usr/lib/rstudio/bin/rstudio /usr/local/bin/rstudio
+cd /tmp
+if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then # for OpenSuSe 15
+  wget -c https://s3.amazonaws.com/rstudio-ide-build/desktop/opensuse15/x86_64/rstudio-2021.09.3-396-x86_64.rpm
+  epm install -y --repack /tmp/rstudio-2021.09.3-396-x86_64.rpm
+  ln -sf /usr/lib/rstudio/bin/rstudio /usr/local/bin/rstudio
+elif [[ "$ver" == "p11" ]]; then # use latest possible version for RedHat 9 with pandoc 2.x
+  wget -c https://s3.amazonaws.com/rstudio-ide-build/electron/rhel9/x86_64/rstudio-2023.03.0-548-x86_64.rpm
+  epm install -y --repack /tmp/rstudio-2023.03.0-548-x86_64.rpm
+  cat <<EOF > /usr/local/bin/rstudio
+#!/bin/bash
+/usr/lib/rstudio/rstudio --no-sandbox $@
+EOF
+  chmod a+x /usr/local/bin/rstudio
+
+  sudo -u "$SUDO_USER" -- mkdir -p ~/.local/share/applications/
+  sudo -u "$SUDO_USER" -- cp /usr/share/applications/rstudio.desktop ~/.local/share/applications/
+  sudo -u "$SUDO_USER" -- sed -i "s|^Exec=/usr/lib/rstudio/rstudio %F|Exec=/usr/lib/rstudio/rstudio --no-sandbox %F|"  ~/.local/share/applications/rstudio.desktop
+fi
+
+apt-get install --reinstall -y eepm
 
 if [ $is_docker == 0 ]; then
 	sudo -u $SUDO_USER -- mkdir -p ~/.config/rstudio
@@ -561,6 +586,9 @@ fi
 if [ "$ver" == "p10" ]; then
     r_ver="4.1"
 fi
+if [ "$ver" == "p11" ]; then
+    r_ver="4.2"
+fi
 
 ## install R-packages with specific versions for reproducibility
 bookdown_ver="0.37"
@@ -584,7 +612,11 @@ fi
 
 # TexLive and fonts
 
-apt-get install -y texlive-extra-utils biber texlive-lang-cyrillic texlive-xetex texlive-fonts-extra texlive-science font-manager texlive-latex-extra fonts-ttf-ms
+if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+  apt-get install -y texlive-extra-utils biber texlive-lang-cyrillic texlive-xetex texlive-fonts-extra texlive-science font-manager texlive-latex-extra fonts-ttf-ms
+elif [ "$ver" == "p11" ]; then # no 'biber' package for p11 and Sisyphus
+  apt-get install -y texlive-extra-utils texlive-lang-cyrillic texlive-xetex texlive-fonts-extra texlive-science font-manager texlive-latex-extra fonts-ttf-ms
+fi
 apt-get install -y alien dpkg
 
 # Atril with epub support
@@ -598,6 +630,9 @@ rm -vf /tmp/fonts-cmu_0.7.0-4_all.deb
 
 # ReText
 apt-get install -y retext
+if [ "$ver" == "p11" ]; then # need PyQt6 WebEngine for WebEngine (Chromium) render on p11
+  apt-get install -y python3-module-PyQt6-WebEngine
+fi
 
 if [ $is_docker == 0 ]; then
 	echo mathjax | sudo -u $SUDO_USER -- tee -a ~/.config/markdown-extensions.txt
@@ -612,7 +647,7 @@ apt-get install -y i586-libGL i586-xorg-dri-{intel,nouveau,radeon,swrast} i586-l
 # Telegram
 if [ "$ver" == "p9" ]; then
   apt-get install -y telegram-desktop
-elif [ "$ver" == "p10" ]; then
+elif [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
   epm play telegram
 fi
 
@@ -629,7 +664,7 @@ fi
 
 # Snap
 if [ $is_docker == 0 ]; then
-    if [ "$ver" == "p10" ]; then
+    if [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
         apt-get install -y snapd
         ln -sf /var/lib/snapd/snap /snap
         systemctl enable --now snapd.service
@@ -700,7 +735,7 @@ if [ "$ver" == "p9" ]; then
 	./install.sh
 
 	rm -vf /home/*/Desktop/arduino-arduinoide.desktop /root/Desktop/arduino-arduinoide.desktop /home/*/Рабочий\ стол/arduino-arduinoide.desktop || true
-elif [ "$ver" == "p10" ]; then
+elif [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
 	apt-get install -y arduino
 fi
 
