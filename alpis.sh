@@ -276,17 +276,17 @@ if [ "$ver" == "p10" ]; then
   if [ $is_docker == 1 ]; then
     if [ -z "$SUDO_USER" ]; then
 	    SUDO_USER=temp_user
-	    useradd $SUDO_USER || true
+	    useradd "$SUDO_USER" || true
     fi
   fi
 
-  su -l $SUDO_USER -c "mkdir -p /home/$SUDO_USER/RPM/SOURCES"
+  su -l "$SUDO_USER" -c "mkdir -p /home/$SUDO_USER/RPM/SOURCES"
 
   cd /tmp
   rm -rf /tmp/vte3
-  su -l $SUDO_USER -c "git clone https://git.altlinux.org/srpms/v/vte3.git -b p9 /tmp/vte3"
+  su -l "$SUDO_USER" -c "git clone https://git.altlinux.org/srpms/v/vte3.git -b p9 /tmp/vte3"
   cd vte3
-  su -l $SUDO_USER -c "cp /tmp/vte3/*.patch /home/$SUDO_USER/RPM/SOURCES/"
+  su -l "$SUDO_USER" -c "cp /tmp/vte3/*.patch /home/$SUDO_USER/RPM/SOURCES/"
 
   curr_ver=$(grep "define ver_major" vte3.spec | awk '{print $NF}')
   new_ver=0.99.3really$curr_ver
@@ -294,14 +294,14 @@ if [ "$ver" == "p10" ]; then
   sed -i "s/define ver_major $curr_ver/define ver_major $new_ver/" vte3.spec
   rm -rf .git
   mv vte "vte-$new_ver.3"
-  su -l $SUDO_USER -c "cd /tmp/vte3 && tar -cJf vte-$new_ver.$sub_ver.tar.xz vte-$new_ver.$sub_ver/ && cp -v /tmp/vte3/vte-$new_ver.$sub_ver.tar.xz /home/$SUDO_USER/RPM/SOURCES/"
-  chown -R $SUDO_USER: "/home/$SUDO_USER/RPM"
+  su -l "$SUDO_USER" -c "cd /tmp/vte3 && tar -cJf vte-$new_ver.$sub_ver.tar.xz vte-$new_ver.$sub_ver/ && cp -v /tmp/vte3/vte-$new_ver.$sub_ver.tar.xz /home/$SUDO_USER/RPM/SOURCES/"
+  chown -R "$SUDO_USER": "/home/$SUDO_USER/RPM"
 
-  su -l $SUDO_USER -c "rpmbb /tmp/vte3/vte3.spec"
+  su -l "$SUDO_USER" -c "rpmbb /tmp/vte3/vte3.spec"
 
-  rm -v /home/$SUDO_USER/RPM/RPMS/*/*vte*debuginfo*.rpm
-  apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*vte*"$new_ver"."$sub_ver"*.rpm || true
-  apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*vte*"$new_ver"."$sub_ver"*.rpm
+  rm -v /home/"$SUDO_USER"/RPM/RPMS/*/*vte*debuginfo*.rpm
+  apt-get install -y --reinstall /home/"$SUDO_USER"/RPM/RPMS/*/*vte*"$new_ver"."$sub_ver"*.rpm || true
+  apt-get install -y --reinstall /home/"$SUDO_USER"/RPM/RPMS/*/*vte*"$new_ver"."$sub_ver"*.rpm
 
   if [ $is_docker == 1 ]; then
     if [ "$SUDO_USER" == "temp_user" ]; then
@@ -316,11 +316,11 @@ if [ "$ver" == "p10" ]; then
       apt-get install -y su etersoft-build-utils rpm-build-xfce4 xfce4-dev-tools libxfconf-devel libxfce4ui-gtk3-devel libpcre2-devel docbook-dtds docbook-style-xsl intltool libvte3-devel xsltproc
       cd /tmp
       apt-get source xfce4-terminal
-      su -l $SUDO_USER -c "rpm -i /tmp/xfce4-terminal-*.src.rpm"
-      su -l $SUDO_USER -c "rpmbb /home/$SUDO_USER/RPM/SPECS/xfce4-terminal.spec"
-      rm -v /home/$SUDO_USER/RPM/RPMS/*/*xfce4-terminal*debuginfo*.rpm
-      apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/x86_64/xfce4-terminal-*.rpm || true
-      apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/x86_64/xfce4-terminal-*.rpm
+      su -l "$SUDO_USER" -c "rpm -i /tmp/xfce4-terminal-*.src.rpm"
+      su -l "$SUDO_USER" -c "rpmbb /home/$SUDO_USER/RPM/SPECS/xfce4-terminal.spec"
+      rm -v /home/"$SUDO_USER"/RPM/RPMS/*/*xfce4-terminal*debuginfo*.rpm
+      apt-get install -y --reinstall /home/"$SUDO_USER"/RPM/RPMS/x86_64/xfce4-terminal-*.rpm || true
+      apt-get install -y --reinstall /home/"$SUDO_USER"/RPM/RPMS/x86_64/xfce4-terminal-*.rpm
 
       apt-get install -y --reinstall xfce4-default
     fi
@@ -335,11 +335,11 @@ if [ "$DESKTOP_SESSION" == "mate" ]; then
   if [ $is_docker == 1 ]; then
     if [ -z "$SUDO_USER" ]; then
 	    SUDO_USER=temp_user
-	    useradd $SUDO_USER || true
+	    useradd "$SUDO_USER" || true
     fi
   fi
 
-  su -l $SUDO_USER -c "mkdir -p /home/$SUDO_USER/RPM/SOURCES"
+  su -l "$SUDO_USER" -c "mkdir -p /home/$SUDO_USER/RPM/SOURCES"
 
   cd /tmp
   rm -rf /tmp/mp
@@ -355,15 +355,15 @@ if [ "$DESKTOP_SESSION" == "mate" ]; then
   # rebuild and pin
   curr_ver=$(grep Version mate-panel.spec | awk -F: '{print $2}' | tr -d ' ')
   curr_rel=$(grep Release mate-panel.spec | awk -F: '{print $2}' | tr -d ' ')
-  su -l $SUDO_USER -c "cp -v /tmp/mp/mate-panel-${curr_ver}.tar /home/$SUDO_USER/RPM/SOURCES/"
-  su -l $SUDO_USER -c "cp -v /tmp/mp/libegg*.tar /home/$SUDO_USER/RPM/SOURCES/" || true
+  su -l "$SUDO_USER" -c "cp -v /tmp/mp/mate-panel-${curr_ver}.tar /home/$SUDO_USER/RPM/SOURCES/"
+  su -l "$SUDO_USER" -c "cp -v /tmp/mp/libegg*.tar /home/$SUDO_USER/RPM/SOURCES/" || true
   
-  chown -R $SUDO_USER: /tmp/mp
-  su -l $SUDO_USER -c "rpmbb /tmp/mp/mate-panel.spec"
+  chown -R "$SUDO_USER": /tmp/mp
+  su -l "$SUDO_USER" -c "rpmbb /tmp/mp/mate-panel.spec"
 
-  rm -v /home/$SUDO_USER/RPM/RPMS/*/*mate-panel*debuginfo*.rpm
-  apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*mate-panel*.rpm || true
-  apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*mate-panel*.rpm
+  rm -v /home/"$SUDO_USER"/RPM/RPMS/*/*mate-panel*debuginfo*.rpm
+  apt-get install -y --reinstall /home/"$SUDO_USER"/RPM/RPMS/*/*mate-panel*.rpm || true
+  apt-get install -y --reinstall /home/"$SUDO_USER"/RPM/RPMS/*/*mate-panel*.rpm
 
   cat <<EOF | tee -a /var/lib/preferences
 Package: libmate-panel
@@ -415,8 +415,8 @@ if [ "$ver" == "p9" ]; then
   cp -avfr clients/cli/rabbitvcs /usr/local/bin/
 
   if [ $is_docker == 0 ]; then
-    sudo -u $SUDO_USER -- mkdir -p ~/.local/share/caja-python/extensions
-    sudo -u $SUDO_USER -- cp -avfr /tmp/rabbitvcs-${rvcs_ver}/clients/caja/RabbitVCS.py ~/.local/share/caja-python/extensions/
+    sudo -u "$SUDO_USER" -- mkdir -p ~/.local/share/caja-python/extensions
+    sudo -u "$SUDO_USER" -- cp -avfr /tmp/rabbitvcs-${rvcs_ver}/clients/caja/RabbitVCS.py ~/.local/share/caja-python/extensions/
   else
     mkdir -p /usr/local/share/caja-python/extensions
     cp -avfr /tmp/rabbitvcs-${rvcs_ver}/clients/caja/RabbitVCS.py /usr/local/share/caja-python/extensions/
@@ -452,15 +452,15 @@ if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
   if [ $is_docker == 1 ]; then
     if [ -z "$SUDO_USER" ]; then
       SUDO_USER=temp_user
-      useradd $SUDO_USER || true
+      useradd "$SUDO_USER" || true
     fi
   fi
 
-  su -l $SUDO_USER -c "mkdir -p /home/$SUDO_USER/RPM/SOURCES"
+  su -l "$SUDO_USER" -c "mkdir -p /home/$SUDO_USER/RPM/SOURCES"
 
   cd /tmp
   rm -rf /tmp/meld
-  su -l $SUDO_USER -c "git clone https://git.altlinux.org/srpms/m/meld.git -b 1.5.3-alt1 /tmp/meld"
+  su -l "$SUDO_USER" -c "git clone https://git.altlinux.org/srpms/m/meld.git -b 1.5.3-alt1 /tmp/meld"
   cd meld
 
   curr_ver=$(grep "define ver_major" meld.spec | awk '{print $NF}')
@@ -473,12 +473,12 @@ if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
   sed -i "s|/usr/bin/env python$|/usr/bin/env python2|" meld/bin/meld meld/tools/check_release meld/tools/install_paths meld/tools/make_release
   rm -rf .git
   mv meld "meld-$new_ver.3"
-  su -l $SUDO_USER -c "cd /tmp/meld && tar -cJf meld-$new_ver.$sub_ver.tar.xz meld-$new_ver.$sub_ver/ && cp -v /tmp/meld/meld-$new_ver.$sub_ver.tar.xz /home/$SUDO_USER/RPM/SOURCES/"
+  su -l "$SUDO_USER" -c "cd /tmp/meld && tar -cJf meld-$new_ver.$sub_ver.tar.xz meld-$new_ver.$sub_ver/ && cp -v /tmp/meld/meld-$new_ver.$sub_ver.tar.xz /home/$SUDO_USER/RPM/SOURCES/"
 
-  su -l $SUDO_USER -c "rpmbb /tmp/meld/meld.spec"
+  su -l "$SUDO_USER" -c "rpmbb /tmp/meld/meld.spec"
 
-  apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*meld*"$new_ver"."$sub_ver"*.rpm || true
-  apt-get install -y --reinstall /home/$SUDO_USER/RPM/RPMS/*/*meld*"$new_ver"."$sub_ver"*.rpm
+  apt-get install -y --reinstall /home/"$SUDO_USER"/RPM/RPMS/*/*meld*"$new_ver"."$sub_ver"*.rpm || true
+  apt-get install -y --reinstall /home/"$SUDO_USER"/RPM/RPMS/*/*meld*"$new_ver"."$sub_ver"*.rpm
 
   if [ $is_docker == 1 ]; then
     if [ "$SUDO_USER" == "temp_user" ]; then
@@ -507,7 +507,7 @@ if [ -n "$vbox_version" ]; then
 fi
 
 if [ $is_docker == 0 ]; then
-	usermod -a -G vboxusers $SUDO_USER
+	usermod -a -G vboxusers "$SUDO_USER"
 fi
 
 # LibreOffice
@@ -544,7 +544,7 @@ fi
 apt-get install --reinstall -y eepm
 
 if [ $is_docker == 0 ]; then
-	sudo -u $SUDO_USER -- mkdir -p ~/.config/rstudio
+	sudo -u "$SUDO_USER" -- mkdir -p ~/.config/rstudio
 	cat <<EOF > ~/.config/rstudio/rstudio-prefs.json 
 {
     "check_for_updates": false,
@@ -553,9 +553,9 @@ if [ $is_docker == 0 ]; then
     "submit_crash_reports": false
 }
 EOF
-	chown $SUDO_USER: ~/.config/rstudio/rstudio-prefs.json
+	chown "$SUDO_USER": ~/.config/rstudio/rstudio-prefs.json
 
-	echo 'crash-handling-enabled="0"' | sudo -u $SUDO_USER -- tee ~/.config/rstudio/crash-handler.conf
+	echo 'crash-handling-enabled="0"' | sudo -u "$SUDO_USER" -- tee ~/.config/rstudio/crash-handler.conf
 else
 	mkdir -p /etc/skel/.config/rstudio
 	cat <<EOF > /etc/skel/.config/rstudio/rstudio-prefs.json 
@@ -595,19 +595,28 @@ bookdown_ver="0.37"
 knitr_ver="1.45"
 xaringan_ver="0.29"
 
-if [ $is_docker == 0 ]; then
-	su -l $SUDO_USER -c "mkdir -p /home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver"
-    su -l $SUDO_USER -c "R -e \"install.packages(c('devtools','tikzDevice'), repos='http://cran.r-project.org/', lib='/home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver')\""
+if [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
+  if [ $is_docker == 0 ]; then
+	su -l "$SUDO_USER" -c "mkdir -p /home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver"
+    su -l "$SUDO_USER" -c "R -e \"install.packages(c('devtools','tikzDevice'), repos='http://cran.r-project.org/', lib='/home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver')\""
 
-    su -l $SUDO_USER -c "R -e \"require(devtools); install_version('bookdown', version = '$bookdown_ver', repos = 'http://cran.r-project.org')\""
-	su -l $SUDO_USER -c "R -e \"require(devtools); install_version('knitr', version = '$knitr_ver', repos = 'http://cran.r-project.org')\""
-	su -l $SUDO_USER -c "R -e \"require(devtools); install_version('xaringan', version = '$xaringan_ver', repos = 'http://cran.r-project.org/')\""
-else
+    su -l "$SUDO_USER" -c "R -e \"require(devtools); install_version('bookdown', version = '$bookdown_ver', repos = 'http://cran.r-project.org')\""
+	su -l "$SUDO_USER" -c "R -e \"require(devtools); install_version('knitr', version = '$knitr_ver', repos = 'http://cran.r-project.org')\""
+	su -l "$SUDO_USER" -c "R -e \"require(devtools); install_version('xaringan', version = '$xaringan_ver', repos = 'http://cran.r-project.org/')\""
+  else
 	R -e "install.packages(c('devtools','tikzDevice'), repos='http://cran.r-project.org')"
 
 	R -e "require(devtools); install_version('bookdown', version = '$bookdown_ver', repos = 'http://cran.r-project.org')"
 	R -e "require(devtools); install_version('knitr', version = '$knitr_ver', repos = 'http://cran.r-project.org')"
 	R -e "require(devtools); install_version('xaringan', version = '$xaringan_ver', repos = 'http://cran.r-project.org/')"
+  fi
+elif [ "$ver" == "p9" ]; then
+  if [ $is_docker == 0 ]; then
+	su -l "$SUDO_USER" -c "mkdir -p /home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver"
+    su -l "$SUDO_USER" -c "R -e \"install.packages(c('bookdown','knitr','xaringan'), repos='http://cran.r-project.org/', lib='/home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver')\""
+  else
+	R -e "install.packages(c('bookdown','knitr','xaringan'), repos = 'http://cran.r-project.org/')"
+  fi
 fi
 
 # TexLive and fonts
@@ -635,8 +644,8 @@ if [ "$ver" == "p11" ]; then # need PyQt6 WebEngine for WebEngine (Chromium) ren
 fi
 
 if [ $is_docker == 0 ]; then
-	echo mathjax | sudo -u $SUDO_USER -- tee -a ~/.config/markdown-extensions.txt
-	chown $SUDO_USER: ~/.config/markdown-extensions.txt
+	echo mathjax | sudo -u "$SUDO_USER" -- tee -a ~/.config/markdown-extensions.txt
+	chown "$SUDO_USER": ~/.config/markdown-extensions.txt
 else
 	echo mathjax >> /etc/skel/.config/markdown-extensions.txt
 fi
@@ -722,8 +731,8 @@ apt-get dedup -y
 
 ## Arduino from official site on p9, Fritzing from repo
 if [ $is_docker == 0 ]; then
-	usermod -a -G dialout $SUDO_USER
-	usermod -a -G uucp $SUDO_USER
+	usermod -a -G dialout "$SUDO_USER"
+	usermod -a -G uucp "$SUDO_USER"
 fi
 
 if [ "$ver" == "p9" ]; then
