@@ -501,9 +501,15 @@ if [ -n "$vbox_version" ]; then
   wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso" -O /usr/share/virtualbox/VBoxGuestAdditions.iso || true
 
   cd /tmp
-  wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/Oracle_VM_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" || true
-  VBoxManage extpack cleanup
-  VBoxManage extpack install --replace "/tmp/Oracle_VM_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" --accept-license=33d7284dc4a0ece381196fda3cfe2ed0e1e8e7ed7f27b9a9ebc4ee22e24bd23c
+  if echo "$vbox_version" | grep -Eq -e '^(5|6)' -e '7.0'; then # ver 5.x, 6.x, 7.0
+    wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/Oracle_VM_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" || true
+    VBoxManage extpack cleanup
+    VBoxManage extpack install --replace "/tmp/Oracle_VM_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" --accept-license=33d7284dc4a0ece381196fda3cfe2ed0e1e8e7ed7f27b9a9ebc4ee22e24bd23c
+  else # ver 7.1
+    wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/Oracle_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" || true
+    VBoxManage extpack cleanup
+    VBoxManage extpack install --replace "/tmp/Oracle_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" --accept-license=eb31505e56e9b4d0fbca139104da41ac6f6b98f8e78968bdf01b1f3da3c4f9ae
+  fi
 fi
 
 if [ $is_docker == 0 ]; then
