@@ -67,40 +67,42 @@ apt-get update
 
 # Configure MATE desktop
 if [[ $is_docker == 0 && "$DESKTOP_SESSION" == "mate" ]]; then
-## install MATE applets for Panel
-apt-get install -y mate-applets
+  ## install MATE applets for Panel
+  apt-get install -y mate-applets
 
-## keyboard layouts, Alt+Shift for layout toggle
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.peripherals-keyboard-xkb.kbd layouts "['us', 'ru']"
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.peripherals-keyboard-xkb.kbd model "''"
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.peripherals-keyboard-xkb.kbd options "['grp\tgrp:alt_shift_toggle']"
+  ## keyboard layouts, Alt+Shift for layout toggle
+  sudo -EHu "$SUDO_USER" -- gsettings set org.mate.peripherals-keyboard-xkb.kbd layouts "['us', 'ru']"
+  sudo -EHu "$SUDO_USER" -- gsettings set org.mate.peripherals-keyboard-xkb.kbd model "''"
+  sudo -EHu "$SUDO_USER" -- gsettings set org.mate.peripherals-keyboard-xkb.kbd options "['grp\tgrp:alt_shift_toggle']"
 
-## screensaver
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.screensaver themes "['screensavers-footlogo-floaters']"
+  if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+    ## screensaver
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.screensaver themes "['screensavers-footlogo-floaters']"
 
-## theme
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.interface gtk-theme "'TraditionalOk'"
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.interface icon-theme "'mate'"
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.general theme "'TraditionalOk'"
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.peripherals-mouse cursor-theme "'mate'"
+    ## theme
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.interface gtk-theme "'TraditionalOk'"
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.interface icon-theme "'mate'"
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.general theme "'TraditionalOk'"
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.peripherals-mouse cursor-theme "'mate'"
 
-## workspaces
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.general num-workspaces 4
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.workspace-names name-1 "'Workspace 1'"
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.workspace-names name-2 "'Workspace 2'"
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.workspace-names name-3 "'Workspace 3'"
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.workspace-names name-4 "'Workspace 4'"
+    ## workspaces
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.general num-workspaces 4
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.workspace-names name-1 "'Workspace 1'"
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.workspace-names name-2 "'Workspace 2'"
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.workspace-names name-3 "'Workspace 3'"
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.workspace-names name-4 "'Workspace 4'"
 
-## Pluma
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.pluma display-line-numbers true
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.pluma highlight-current-line true
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.pluma auto-detected-encodings "['UTF-8', 'GBK', 'CURRENT', 'ISO-8859-15', 'UTF-16', 'WINDOWS-1251']"
+    ## Pluma
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.pluma display-line-numbers true
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.pluma highlight-current-line true
+    sudo -EHu "$SUDO_USER" -- gsettings set org.mate.pluma auto-detected-encodings "['UTF-8', 'GBK', 'CURRENT', 'ISO-8859-15', 'UTF-16', 'WINDOWS-1251']"
+  fi # p9 or p11
 
 
-## terminal
-sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.global-keybindings run-command-terminal "'<Primary><Alt>t'"
+  ## terminal
+  sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.global-keybindings run-command-terminal "'<Primary><Alt>t'"
 
-cat <<EOF > /tmp/dconf-mate-terminal
+  cat <<EOF > /tmp/dconf-mate-terminal
 [keybindings]
 help='disabled'
 
@@ -119,8 +121,9 @@ scrollback-unlimited=true
 EOF
 sudo -EHu "$SUDO_USER" -- dconf load /org/mate/terminal/ < /tmp/dconf-mate-terminal
 
-## mate panels layout
-cat <<EOF > /tmp/dconf-mate-panel
+  if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+    ## mate panels layout
+    cat <<EOF > /tmp/dconf-mate-panel
 [general]
 object-id-list=['menu-bar', 'notification-area', 'clock', 'show-desktop', 'window-list', 'workspace-switcher', 'object-0', 'object-1', 'object-2', 'object-3']
 toplevel-id-list=['top', 'bottom']
@@ -224,11 +227,9 @@ screen=0
 size=24
 EOF
 
-sudo -EHu "$SUDO_USER" -- dconf load /org/mate/panel/ < /tmp/dconf-mate-panel
+    sudo -EHu "$SUDO_USER" -- dconf load /org/mate/panel/ < /tmp/dconf-mate-panel
 
-
-## window management keyboard shortcuts for Ubuntu MATE 18.04 LTS
-if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
+    ## window management keyboard shortcuts for Ubuntu MATE 18.04 LTS
     sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.window-keybindings unmaximize '<Mod4>Down'
     sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.window-keybindings maximize '<Mod4>Up'
     sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.window-keybindings tile-to-corner-ne '<Alt><Mod4>Right'
@@ -240,7 +241,7 @@ if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
     sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.window-keybindings tile-to-side-w '<Mod4>Left'
 
     sudo -EHu "$SUDO_USER" -- gsettings set org.mate.Marco.global-keybindings run-command-terminal '<Primary><Alt>t'
-fi
+  fi # p9 or p11
 
 fi # (is_docker && MATE)?
 
@@ -488,6 +489,8 @@ if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
   fi
 elif [ "$ver" == "p11" ]; then
   apt-get install -y meld
+  # workaround for https://bugzilla.altlinux.org/53054
+  apt-get install -y python3-module-pygobject3
 fi
 #/meld
 
@@ -778,6 +781,11 @@ mkdir -p /usr/local/share/applications
 cp -avrfu share/{icons,applications,mime} /usr/local/share/
 update-mime-database /usr/local/share/mime/
 update-menus
+
+# use MATE desktop with Ayatana indicators on p11
+if [ "$ver" == "p11" ]; then
+  apt-get install --reinstall -y alt-mate-ayatana-settings
+fi
 
 echo "ALT Linux post-install script finished! Reboot to apply all new settings and enjoy newly installed software."
 
