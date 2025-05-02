@@ -536,18 +536,12 @@ if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then # for OpenSuSe 15
   wget -c https://s3.amazonaws.com/rstudio-ide-build/desktop/opensuse15/x86_64/rstudio-2021.09.3-396-x86_64.rpm
   epm install -y --repack /tmp/rstudio-2021.09.3-396-x86_64.rpm
   ln -sf /usr/lib/rstudio/bin/rstudio /usr/local/bin/rstudio
-elif [[ "$ver" == "p11" ]]; then # use latest possible version for RedHat 9 with pandoc 2.x
-  wget -c https://s3.amazonaws.com/rstudio-ide-build/electron/rhel9/x86_64/rstudio-2023.03.0-548-x86_64.rpm
-  epm install -y --repack /tmp/rstudio-2023.03.0-548-x86_64.rpm
-  cat <<EOF > /usr/local/bin/rstudio
-#!/bin/bash
-/usr/lib/rstudio/rstudio --no-sandbox $@
-EOF
-  chmod a+x /usr/local/bin/rstudio
-
-  sudo -u "$SUDO_USER" -- mkdir -p ~/.local/share/applications/
-  sudo -u "$SUDO_USER" -- cp /usr/share/applications/rstudio.desktop ~/.local/share/applications/
-  sudo -u "$SUDO_USER" -- sed -i "s|^Exec=/usr/lib/rstudio/rstudio %F|Exec=/usr/lib/rstudio/rstudio --no-sandbox %F|"  ~/.local/share/applications/rstudio.desktop
+elif [[ "$ver" == "p11" ]]; then
+  # NOTE: installation of the latest possible version 2023.03.0-548 with pandoc 2.19.2 results in error
+  #       "/usr/lib/rstudio/resources/app/bin/rsession: symbol lookup error: /usr/lib/rstudio/resources/app/bin/rsession: undefined symbol: Rf_countContexts"
+  #       So we need to use modern version with Pandoc 3.2.
+  wget -c https://s3.amazonaws.com/rstudio-ide-build/electron/opensuse15/x86_64/rstudio-2024.12.1-563-x86_64.rpm
+  epm install -y --repack /tmp/rstudio-2024.12.1-563-x86_64.rpm
 fi
 
 apt-get install --reinstall -y eepm
