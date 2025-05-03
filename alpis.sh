@@ -590,7 +590,7 @@ if [ "$ver" == "p10" ]; then
     r_ver="4.1"
 fi
 if [ "$ver" == "p11" ]; then
-    r_ver="4.2"
+    r_ver="4.5"
 fi
 
 ## install R-packages with specific versions for reproducibility
