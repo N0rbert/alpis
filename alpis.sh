@@ -56,7 +56,7 @@ apt-repo add "$(apt-repo | grep branch | grep 'noarch ' | sed 's/^rpm /rpm-src /
 sed -i "s|pub distributions/ALTLinux|pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 
 # add Autoimports
-if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
   apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
   apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
   apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
@@ -245,8 +245,9 @@ EOF
 
 fi # (is_docker && MATE)?
 
-# temporary fix for https://bugzilla.altlinux.org/43236
-cat << \EOF > /etc/profile.d/mate.sh
+# temporary fix for https://bugzilla.altlinux.org/43236 on p10
+if [ "$ver" == "p10" ]; then
+  cat << \EOF > /etc/profile.d/mate.sh
 if [ "$DESKTOP_SESSION" == "mate" ]; then
   if [ -z "$XDG_DATA_DIRS" ]; then
     XDG_DATA_DIRS=/usr/share/mate:/usr/local/share/:/usr/share/
@@ -260,7 +261,8 @@ if [ "$DESKTOP_SESSION" == "mate" ]; then
   fi
 fi
 EOF
-chmod +x /etc/profile.d/mate.sh
+  chmod +x /etc/profile.d/mate.sh
+fi
 
 # temporary fix for p10 and p11 - https://bugzilla.altlinux.org/43443
 if [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
