@@ -436,7 +436,7 @@ apt-get install -y inkscape
 apt-get install -y doublecmd-gtk
 
 # System tools
-if [ "$ver" == "p9" ]; then
+if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
     apt-get install -y fslint fslint-gnome
 fi
 
@@ -777,8 +777,10 @@ update-mime-database /usr/local/share/mime/
 update-menus
 
 # use MATE desktop with Ayatana indicators on p11
-if [ "$ver" == "p11" ]; then
-  apt-get install --reinstall -y alt-mate-ayatana-settings
+if [[ $is_docker == 0 && "$DESKTOP_SESSION" == "mate" ]]; then
+  if [ "$ver" == "p11" ]; then
+    apt-get install --reinstall -y alt-mate-ayatana-settings
+  fi
 fi
 
 echo "ALT Linux post-install script finished! Reboot to apply all new settings and enjoy newly installed software."
