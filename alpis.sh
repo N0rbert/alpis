@@ -691,9 +691,9 @@ control fusermount public
 # Squid-deb-proxy auto-detect as in https://forum.altlinux.org/index.php?topic=46596
 if [ $is_docker == 0 ]; then
   cd /tmp
-  wget -c http://mirror.yandex.ru/debian/pool/main/s/squid-deb-proxy/squid-deb-proxy-client_0.8.14+nmu2_all.deb
+  wget -c http://mirror.yandex.ru/debian/pool/main/s/squid-deb-proxy/squid-deb-proxy-client_0.8.15_all.deb
   apt-get install -y rpm-build-python python-base
-  epm install -y --repack ./squid-deb-proxy-client_0.8.14+nmu2_all.deb
+  epm install -y --repack ./squid-deb-proxy-client_0.8.15_all.deb
 
   cat <<\EOF | sudo tee /etc/NetworkManager/dispatcher.d/99-squid-deb-proxy-detect
 #!/bin/sh
