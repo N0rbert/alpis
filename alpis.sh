@@ -1,7 +1,7 @@
 #!/bin/bash
 # ALT Linux post install script
 
-if lsb_release -cs | grep -qE "Destiny|CaptainFinn|Laertes|Hypericum|Autolycus|Salvia"; then
+if lsb_release -cs | grep -qE "Destiny|CaptainFinn|Laertes|Hypericum|Autolycus|Salvia|Giuseppe"; then
 	if lsb_release -d | grep -qE "p9|9\."; then
         ver=p9
 	fi
@@ -498,7 +498,7 @@ fi
 
 # VirtualBox
 apt-get install -y virtualbox virtualbox-guest-additions virtualbox-doc
-vbox_version=$(rpm -qa 2>/dev/null | grep -E "^virtualbox\-(5|6|7)" | awk -F'-' '{print $2}')
+vbox_version=$(rpm -qa 2>/dev/null | grep -E "^virtualbox-(5|6|7)" | awk -F'-' '{print $2}' | sed "s/[a-z]//g")
 
 # NOTE: seems to be better than "epm play virtualbox-extpack" as we get VBox GA ISO too for the same version
 if [ -n "$vbox_version" ]; then
