@@ -582,7 +582,7 @@ wget -c $LATEST_PANDOC_DEB_URL;
 epm install -y --repack /tmp/pandoc-2.16.1-1-amd64.deb
 
 # bookdown install for local user
-apt-get install -y rpm-build libssl-devel libcurl-devel libxml2-devel libcairo-devel gcc gcc-c++ libfribidi-devel libtiff-devel libjpeg-devel libgit2-devel
+apt-get install -y rpm-build libssl-devel libcurl-devel libxml2-devel libcairo-devel gcc gcc-c++ libfribidi-devel libtiff-devel libjpeg-devel libgit2-devel libwebp-devel R-tcltk
 apt-get install -y evince
 
 if [ "$ver" == "p9" ]; then
