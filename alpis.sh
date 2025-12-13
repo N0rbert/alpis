@@ -446,7 +446,11 @@ apt-get install -y htop mc ncdu aptitude synaptic synaptic-usermode eepm apf men
 #apf update
 
 # Kate text editor
-apt-get install -y kde5-kate kde5-profile
+if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+  apt-get install -y kde5-kate kde5-profile
+else
+  apt-get install -y kate kde-common
+fi
 
 # Meld 1.5.3 as in https://askubuntu.com/a/965151/66509 with workaround for https://bugzilla.altlinux.org/44923
 if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
