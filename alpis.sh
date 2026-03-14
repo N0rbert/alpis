@@ -607,13 +607,13 @@ xaringan_ver="0.29"
 if [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
   if [ $is_docker == 0 ]; then
 	su -l "$SUDO_USER" -c "mkdir -p /home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver"
-    su -l "$SUDO_USER" -c "R -e \"install.packages(c('devtools','tikzDevice'), repos='http://cran.r-project.org/', lib='/home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver')\""
+    su -l "$SUDO_USER" -c "R -e \"install.packages(c('devtools','tikzDevice','remotes'), repos='http://cran.r-project.org/', lib='/home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver')\""
 
     su -l "$SUDO_USER" -c "R -e \"require(devtools); install_version('bookdown', version = '$bookdown_ver', repos = 'http://cran.r-project.org')\""
 	su -l "$SUDO_USER" -c "R -e \"require(devtools); install_version('knitr', version = '$knitr_ver', repos = 'http://cran.r-project.org')\""
 	su -l "$SUDO_USER" -c "R -e \"require(devtools); install_version('xaringan', version = '$xaringan_ver', repos = 'http://cran.r-project.org/')\""
   else
-	R -e "install.packages(c('devtools','tikzDevice'), repos='http://cran.r-project.org')"
+	R -e "install.packages(c('devtools','tikzDevice','remotes'), repos='http://cran.r-project.org')"
 
 	R -e "require(devtools); install_version('bookdown', version = '$bookdown_ver', repos = 'http://cran.r-project.org')"
 	R -e "require(devtools); install_version('knitr', version = '$knitr_ver', repos = 'http://cran.r-project.org')"
