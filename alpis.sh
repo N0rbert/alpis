@@ -1,7 +1,7 @@
 #!/bin/bash
 # ALT Linux post install script
 
-if lsb_release -cs | grep -qE "Destiny|CaptainFinn|Laertes|Hypericum|Autolycus|Salvia|Giuseppe"; then
+if lsb_release -cs | grep -qEi "Destiny|CaptainFinn|Laertes|Hypericum|Autolycus|Salvia|Giuseppe|Sisyphus"; then
 	if lsb_release -d | grep -qE "p9|9\."; then
         ver=p9
 	fi
@@ -11,8 +11,11 @@ if lsb_release -cs | grep -qE "Destiny|CaptainFinn|Laertes|Hypericum|Autolycus|S
     if lsb_release -d | grep -qE "p11|11\."; then
         ver=p11
     fi
+    if lsb_release -d | grep -qE "Sisyphus|Regular"; then
+        ver=Sisyphus
+    fi
 else
-    echo "Currently only ALT Linux p9, p10 and p11 - SimplyLinux, Workstation and StarterKit MATE are supported!"
+    echo "Currently only ALT Linux p9, p10, p11 and Sisyphus - SimplyLinux, Workstation and StarterKit MATE are supported!"
     exit 1
 fi
 
@@ -50,13 +53,20 @@ fi
 
 # add rpm-src
 apt-get install -y apt-repo
-apt-repo add "$(apt-repo | grep branch | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/debuginfo//g' | sort -u | head -n1)"
-apt-repo add "$(apt-repo | grep branch | grep 'noarch ' | sed 's/^rpm /rpm-src /' | sort -u | head -n1)"
-## temporary fix for https://bugzilla.altlinux.org/48551
-sed -i "s|pub distributions/ALTLinux|pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
+  apt-repo add "$(apt-repo | grep branch | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/debuginfo//g' | sort -u | head -n1)"
+  apt-repo add "$(apt-repo | grep branch | grep 'noarch ' | sed 's/^rpm /rpm-src /' | sort -u | head -n1)"
+  ## temporary fix for https://bugzilla.altlinux.org/48551
+  sed -i "s|pub distributions/ALTLinux|pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+elif [ "$ver" == "Sisyphus" ]; then
+  apt-repo add "$(apt-repo | grep Sisyphus | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sed 's/debuginfo//g' | sort -u | head -n1)"
+  apt-repo add "$(apt-repo | grep Sisyphus | grep 'noarch ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sort -u | head -n1)"
+
+  sed -i "s| pub/distributions/ALTLinux|/pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+fi
 
 # add Autoimports
-if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
+if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
   apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
   apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
   apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
@@ -264,8 +274,8 @@ EOF
   chmod +x /etc/profile.d/mate.sh
 fi
 
-# temporary fix for p10 and p11 - https://bugzilla.altlinux.org/43443
-if [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
+# temporary fix for p10, p11 and Sisyphus - https://bugzilla.altlinux.org/43443
+if [[ "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
   ln -sf /usr/bin/mate-volume-control-status-icon /usr/local/bin/mate-volume-control-applet
 fi
 
@@ -330,9 +340,9 @@ if [ "$ver" == "p10" ]; then
   fi
 fi #/bug 43403
 
-# temporarary fix for p9, p10 and p11 - https://bugzilla.altlinux.org/44100
+# temporarary fix for p9, p10, p11 and Sisyphus - https://bugzilla.altlinux.org/44100
 if [ "$DESKTOP_SESSION" == "mate" ]; then
- if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
+ if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
   apt-get install -y su etersoft-build-utils mate-common gtk-doc libSM-devel libXi-devel libXrandr-devel libdbus-glib-devel libdconf-devel libmateweather-devel librsvg-devel libwnck3-devel mate-desktop-devel mate-menus-devel yelp-tools libgtk-layer-shell-devel
   
   if [ $is_docker == 1 ]; then
@@ -424,7 +434,7 @@ if [ "$ver" == "p9" ]; then
     mkdir -p /usr/local/share/caja-python/extensions
     cp -avfr /tmp/rabbitvcs-${rvcs_ver}/clients/caja/RabbitVCS.py /usr/local/share/caja-python/extensions/
   fi
-elif [[ "$ver" == "p10" || "$ver" == "p11" ]]; then # bug https://bugs.altlinux.org/30354 is fixed, so using rpm-packages here
+elif [[ "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then # bug https://bugs.altlinux.org/30354 is fixed, so using rpm-packages here
   apt-get install -y rabbitvcs-caja
 fi #/rabbitvcs for Caja
 
@@ -444,6 +454,10 @@ fi
 
 apt-get install -y htop mc ncdu aptitude synaptic synaptic-usermode eepm apf menu
 #apf update
+
+if [ "$ver" == "Sisyphus" ]; then
+    apt-get install -y command-not-found
+fi
 
 # Kate text editor
 if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
@@ -493,7 +507,7 @@ if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
       userdel -r -f temp_user
     fi
   fi
-elif [ "$ver" == "p11" ]; then
+elif [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
   apt-get install -y meld
   # workaround for https://bugzilla.altlinux.org/53054
   apt-get install -y python3-module-pygobject3
@@ -531,7 +545,7 @@ apt-get install LibreOffice-still -y
 # RStudio
 if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
   apt-get install -y libpq5 libsqlite sqlite R-base R-devel R-doc-html
-elif [ "$ver" == "p11" ]; then
+elif [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
   apt-get install -y libpq5 libsqlite3-devel R-base R-devel R-doc-html
 fi
 
@@ -542,7 +556,7 @@ if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then # for OpenSuSe 15
   wget -c https://s3.amazonaws.com/rstudio-ide-build/desktop/opensuse15/x86_64/rstudio-2021.09.3-396-x86_64.rpm
   epm install -y --repack /tmp/rstudio-2021.09.3-396-x86_64.rpm
   ln -sf /usr/lib/rstudio/bin/rstudio /usr/local/bin/rstudio
-elif [[ "$ver" == "p11" ]]; then
+elif [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
   # NOTE: installation of the latest possible version 2023.03.0-548 with pandoc 2.19.2 results in error
   #       "/usr/lib/rstudio/resources/app/bin/rsession: symbol lookup error: /usr/lib/rstudio/resources/app/bin/rsession: undefined symbol: Rf_countContexts"
   #       So we need to use modern version with Pandoc 3.2.
@@ -595,7 +609,7 @@ fi
 if [ "$ver" == "p10" ]; then
     r_ver="4.1"
 fi
-if [ "$ver" == "p11" ]; then
+if [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
     r_ver="4.5"
 fi
 
@@ -604,7 +618,7 @@ bookdown_ver="0.37"
 knitr_ver="1.45"
 xaringan_ver="0.29"
 
-if [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
+if [[ "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
   if [ $is_docker == 0 ]; then
 	su -l "$SUDO_USER" -c "mkdir -p /home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver"
     su -l "$SUDO_USER" -c "R -e \"install.packages(c('devtools','tikzDevice','remotes'), repos='http://cran.r-project.org/', lib='/home/$SUDO_USER/R/x86_64-alt-linux-gnu-library/$r_ver')\""
@@ -632,7 +646,7 @@ fi
 
 if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
   apt-get install -y texlive-extra-utils biber texlive-lang-cyrillic texlive-xetex texlive-fonts-extra texlive-science font-manager texlive-latex-extra fonts-ttf-ms
-elif [ "$ver" == "p11" ]; then # no 'biber' package for p11 and Sisyphus
+elif [[ "$ver" == "p11"  || "$ver" == "Sisyphus" ]]; then # no 'biber' package for p11 and Sisyphus
   apt-get install -y texlive-extra-utils texlive-lang-cyrillic texlive-xetex texlive-fonts-extra texlive-science font-manager texlive-latex-extra fonts-ttf-ms
 fi
 apt-get install -y alien dpkg
@@ -640,15 +654,20 @@ apt-get install -y alien dpkg
 # Atril with epub support
 apt-get install -y libmate-document-viewer mate-document-viewer
 
-## get fonts-cmu from Debian
-cd /tmp
-wget -c http://mirror.yandex.ru/debian/pool/main/f/fonts-cmu/fonts-cmu_0.7.0-4_all.deb
-epm install -y --repack /tmp/fonts-cmu_0.7.0-4_all.deb
-rm -vf /tmp/fonts-cmu_0.7.0-4_all.deb
+## install fonts-cmu on Sisyphus
+if [ "$ver" == "Sisyphus" ]; then
+  apt-get install -y fonts-ttf-cmu
+## or get them from Debian and repack
+else
+  cd /tmp
+  wget -c http://mirror.yandex.ru/debian/pool/main/f/fonts-cmu/fonts-cmu_0.7.0-4_all.deb
+  epm install -y --repack /tmp/fonts-cmu_0.7.0-4_all.deb
+  rm -vf /tmp/fonts-cmu_0.7.0-4_all.deb
+fi
 
 # ReText
 apt-get install -y retext
-if [ "$ver" == "p11" ]; then # need PyQt6 WebEngine for WebEngine (Chromium) render on p11
+if [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then # need PyQt6 WebEngine for WebEngine (Chromium) render on p11
   apt-get install -y python3-module-PyQt6-WebEngine
 fi
 
@@ -665,7 +684,7 @@ apt-get install -y i586-libGL i586-xorg-dri-{intel,nouveau,radeon,swrast} i586-l
 # Telegram
 if [ "$ver" == "p9" ]; then
   apt-get install -y telegram-desktop
-elif [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
+elif [[ "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
   epm play telegram
 fi
 
@@ -682,7 +701,7 @@ fi
 
 # Snap
 if [ $is_docker == 0 ]; then
-    if [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
+    if [[ "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
         apt-get install -y snapd
         ln -sf /var/lib/snapd/snap /snap
         systemctl enable --now snapd.service
@@ -753,7 +772,7 @@ if [ "$ver" == "p9" ]; then
 	./install.sh
 
 	rm -vf /home/*/Desktop/arduino-arduinoide.desktop /root/Desktop/arduino-arduinoide.desktop /home/*/Рабочий\ стол/arduino-arduinoide.desktop || true
-elif [[ "$ver" == "p10" || "$ver" == "p11" ]]; then
+elif [[ "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
 	apt-get install -y arduino
 fi
 
@@ -782,9 +801,9 @@ cp -avrfu share/{icons,applications,mime} /usr/local/share/
 update-mime-database /usr/local/share/mime/
 update-menus
 
-# use MATE desktop with Ayatana indicators on p11
+# use MATE desktop with Ayatana indicators on p11 and Sisyphus
 if [[ $is_docker == 0 && "$DESKTOP_SESSION" == "mate" ]]; then
-  if [ "$ver" == "p11" ]; then
+  if [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
     apt-get install --reinstall -y alt-mate-ayatana-settings
   fi
 fi
