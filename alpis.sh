@@ -51,6 +51,18 @@ if [ $is_docker == 0 ]; then
   update-kernel -a -f
 fi
 
+# fix for CVE-2026-31431 (AKA copy.fail)
+if [ $is_docker == 0 ]; then
+  cat <<EOF > /etc/modprobe.d/disable-algif_aead.conf
+# Disable algif_aead module due to CVE-2026-31431 (AKA copy.fail)
+# This will likely be re-enabled in a subsequent update once an updated
+# kernel has been deployed.
+# Blacklisting the module isn't sufficient, we need to do as below:
+install algif_aead /bin/false
+EOF
+  modprobe -r algif_aead || true
+fi
+
 # add rpm-src
 apt-get install -y apt-repo
 if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
