@@ -74,6 +74,14 @@ EOF
   echo 3 > /proc/sys/vm/drop_caches
 fi
 
+# fix for CVE-2026-46331 (AKA PEdit-CoW)
+if [ $is_docker == 0 ]; then
+  cat <<EOF > /etc/modprobe.d/blacklist-act-pedit.conf
+install act_pedit /bin/false
+EOF
+  modprobe -r act_pedit || true
+fi
+
 # add rpm-src
 apt-get install -y apt-repo
 if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
