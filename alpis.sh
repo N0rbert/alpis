@@ -571,7 +571,11 @@ if [ $is_docker == 0 ]; then
 fi
 
 # LibreOffice
-apt-get install LibreOffice-still -y
+if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
+  apt-get install -y LibreOffice-still LibreOffice-still-gtk3 LibreOffice-still-langpack-ru
+elif [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
+  apt-get install -y libreoffice libreoffice-gtk3 libreoffice-langpack-ru
+fi
 
 # RStudio
 if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
