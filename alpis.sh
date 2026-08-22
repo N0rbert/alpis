@@ -32,10 +32,10 @@ then
 fi
 
 rpm_arch="$(arch)"
-if [[ "$rpm_arch" == "x86_64" || "$rpm_arch" == "aarch64" ]]; then
+if [[ "$rpm_arch" == "x86_64" || "$rpm_arch" == "aarch64" || "$rpm_arch" == "loongarch64" ]]; then
     echo "Detected CPU architecture is $rpm_arch, it is supported."
 else
-    echo "Currently only amd64 (x86_64) and arm64 (aarch64) CPU architectures are supported!"
+    echo "Currently only amd64 (x86_64), arm64 (aarch64) and loongarch64 CPU architectures are supported!"
     exit 4
 fi
 
@@ -101,10 +101,16 @@ elif [ "$ver" == "Sisyphus" ]; then
     apt-repo add "$(apt-repo | grep Sisyphus | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sed 's/debuginfo//g' | sort -u | head -n1)"
   elif [ "$rpm_arch" == "aarch64" ]; then
     apt-repo add "$(apt-repo | grep Sisyphus | grep 'aarch64 ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sed 's/debuginfo//g' | sort -u | head -n1)"
+  elif [ "$rpm_arch" == "loongarch64" ]; then
+    apt-repo add "$(apt-repo | grep Sisyphus | grep 'loongarch64 ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sed 's/debuginfo//g' | sort -u | head -n1)"
   fi
   apt-repo add "$(apt-repo | grep Sisyphus | grep 'noarch ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sort -u | head -n1)"
 
   sed -i "s| pub/distributions/ALTLinux|/pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+
+  if [ "$rpm_arch" == "loongarch64" ]; then
+    sed -i "s|pub distributions/ALTLinux|pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+  fi
 fi
 
 if [ "$rpm_arch" == "x86_64" ]; then
@@ -489,7 +495,9 @@ apt-get install -y gimp
 apt-get install -y inkscape
 
 # Double Commander
-apt-get install -y doublecmd-gtk
+if [ "$rpm_arch" != "loongarch64" ]; then
+  apt-get install -y doublecmd-gtk
+fi
 
 # System tools
 if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then
@@ -751,7 +759,9 @@ if [ "$rpm_arch" == "x86_64" ]; then
 fi
 
 # NotepadQQ
-apt-get install -y notepadqq
+if [ "$rpm_arch" != "loongarch64" ]; then
+  apt-get install -y notepadqq
+fi
 
 # Flatpak
 apt-get install -y flatpak
