@@ -31,8 +31,11 @@ then
     exit 3
 fi
 
-if [ "$(arch)" != "x86_64" ]; then
-    echo "Currently only x86_64 CPU architecture is supported!"
+rpm_arch="$(arch)"
+if [[ "$rpm_arch" == "x86_64" || "$rpm_arch" == "aarch64" ]]; then
+    echo "Detected CPU architecture is $rpm_arch, it is supported."
+else
+    echo "Currently only amd64 (x86_64) and arm64 (aarch64) CPU architectures are supported!"
     exit 4
 fi
 
@@ -85,23 +88,33 @@ fi
 # add rpm-src
 apt-get install -y apt-repo
 if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" ]]; then
-  apt-repo add "$(apt-repo | grep branch | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/debuginfo//g' | sort -u | head -n1)"
+  if [ "$rpm_arch" == "x86_64" ]; then
+    apt-repo add "$(apt-repo | grep branch | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/debuginfo//g' | sort -u | head -n1)"
+  elif [ "$rpm_arch" == "aarch64" ]; then
+    apt-repo add "$(apt-repo | grep branch | grep 'aarch64 ' | sed 's/^rpm /rpm-src /' | sed 's/debuginfo//g' | sort -u | head -n1)"
+  fi
   apt-repo add "$(apt-repo | grep branch | grep 'noarch ' | sed 's/^rpm /rpm-src /' | sort -u | head -n1)"
   ## temporary fix for https://bugzilla.altlinux.org/48551
   sed -i "s|pub distributions/ALTLinux|pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 elif [ "$ver" == "Sisyphus" ]; then
-  apt-repo add "$(apt-repo | grep Sisyphus | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sed 's/debuginfo//g' | sort -u | head -n1)"
+  if [ "$rpm_arch" == "x86_64" ]; then
+    apt-repo add "$(apt-repo | grep Sisyphus | grep 'x86_64 ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sed 's/debuginfo//g' | sort -u | head -n1)"
+  elif [ "$rpm_arch" == "aarch64" ]; then
+    apt-repo add "$(apt-repo | grep Sisyphus | grep 'aarch64 ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sed 's/debuginfo//g' | sort -u | head -n1)"
+  fi
   apt-repo add "$(apt-repo | grep Sisyphus | grep 'noarch ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sort -u | head -n1)"
 
   sed -i "s| pub/distributions/ALTLinux|/pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 fi
 
-# add Autoimports
-if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
-  apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
-  apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
-  apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
-  apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
+if [ "$rpm_arch" == "x86_64" ]; then
+  # add Autoimports
+  if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
+    apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
+    apt-repo add "rpm http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
+    apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver x86_64 autoimports"
+    apt-repo add "rpm-src http://mirror.yandex.ru/altlinux/autoimports/$ver noarch autoimports"
+  fi
 fi
 
 apt-get update
@@ -375,7 +388,7 @@ fi #/bug 43403
 if [ "$DESKTOP_SESSION" == "mate" ]; then
  if [[ "$ver" == "p9" || "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
   apt-get install -y su etersoft-build-utils mate-common gtk-doc libSM-devel libXi-devel libXrandr-devel libdbus-glib-devel libdconf-devel libmateweather-devel librsvg-devel libwnck3-devel mate-desktop-devel mate-menus-devel yelp-tools libgtk-layer-shell-devel
-  
+
   if [ $is_docker == 1 ]; then
     if [ -z "$SUDO_USER" ]; then
 	    SUDO_USER=temp_user
@@ -401,7 +414,7 @@ if [ "$DESKTOP_SESSION" == "mate" ]; then
   curr_rel=$(grep Release mate-panel.spec | awk -F: '{print $2}' | tr -d ' ')
   su -l "$SUDO_USER" -c "cp -v /tmp/mp/mate-panel-${curr_ver}.tar /home/$SUDO_USER/RPM/SOURCES/"
   su -l "$SUDO_USER" -c "cp -v /tmp/mp/libegg*.tar /home/$SUDO_USER/RPM/SOURCES/" || true
-  
+
   chown -R "$SUDO_USER": /tmp/mp
   su -l "$SUDO_USER" -c "rpmbb /tmp/mp/mate-panel.spec"
 
@@ -430,7 +443,7 @@ ln -sf /var/lib/preferences /etc/apt/preferences.d/synaptic
 	    unset SUDO_USER
 	    userdel -r -f temp_user
     fi
-  fi  
+  fi
  fi #/bug 44100
 fi #/MATE
 
@@ -451,7 +464,7 @@ if [ "$ver" == "p9" ]; then
 
   cd /tmp
   wget -c https://github.com/rabbitvcs/rabbitvcs/archive/refs/tags/v${rvcs_ver}.tar.gz
-  rm -rf cd rabbitvcs-${rvcs_ver}/ 
+  rm -rf cd rabbitvcs-${rvcs_ver}/
   tar -xf v${rvcs_ver}.tar.gz
   cd rabbitvcs-${rvcs_ver}/
   ${python_exe} setup.py build
@@ -546,28 +559,30 @@ fi
 #/meld
 
 # VirtualBox
-apt-get install -y virtualbox virtualbox-guest-additions virtualbox-doc
-vbox_version=$(rpm -qa 2>/dev/null | grep -E "^virtualbox-(5|6|7)" | awk -F'-' '{print $2}' | sed "s/[a-z]//g")
+if [ "$rpm_arch" == "x86_64" ]; then
+  apt-get install -y virtualbox virtualbox-guest-additions virtualbox-doc
+  vbox_version=$(rpm -qa 2>/dev/null | grep -E "^virtualbox-(5|6|7)" | awk -F'-' '{print $2}' | sed "s/[a-z]//g")
 
-# NOTE: seems to be better than "epm play virtualbox-extpack" as we get VBox GA ISO too for the same version
-if [ -n "$vbox_version" ]; then
-  rm -v /usr/share/virtualbox/VBoxGuestAdditions.iso || true
-  wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso" -O /usr/share/virtualbox/VBoxGuestAdditions.iso || true
+  # NOTE: seems to be better than "epm play virtualbox-extpack" as we get VBox GA ISO too for the same version
+  if [ -n "$vbox_version" ]; then
+    rm -v /usr/share/virtualbox/VBoxGuestAdditions.iso || true
+    wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso" -O /usr/share/virtualbox/VBoxGuestAdditions.iso || true
 
-  cd /tmp
-  if echo "$vbox_version" | grep -Eq -e '^(5|6)' -e '7.0'; then # ver 5.x, 6.x, 7.0
-    wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/Oracle_VM_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" || true
-    VBoxManage extpack cleanup
-    VBoxManage extpack install --replace "/tmp/Oracle_VM_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" --accept-license=33d7284dc4a0ece381196fda3cfe2ed0e1e8e7ed7f27b9a9ebc4ee22e24bd23c
-  else # ver 7.1
-    wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/Oracle_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" || true
-    VBoxManage extpack cleanup
-    VBoxManage extpack install --replace "/tmp/Oracle_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" --accept-license=eb31505e56e9b4d0fbca139104da41ac6f6b98f8e78968bdf01b1f3da3c4f9ae
+    cd /tmp
+    if echo "$vbox_version" | grep -Eq -e '^(5|6)' -e '7.0'; then # ver 5.x, 6.x, 7.0
+      wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/Oracle_VM_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" || true
+      VBoxManage extpack cleanup
+      VBoxManage extpack install --replace "/tmp/Oracle_VM_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" --accept-license=33d7284dc4a0ece381196fda3cfe2ed0e1e8e7ed7f27b9a9ebc4ee22e24bd23c
+    else # ver 7.1
+      wget -c "https://download.virtualbox.org/virtualbox/${vbox_version}/Oracle_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" || true
+      VBoxManage extpack cleanup
+      VBoxManage extpack install --replace "/tmp/Oracle_VirtualBox_Extension_Pack-${vbox_version}.vbox-extpack" --accept-license=eb31505e56e9b4d0fbca139104da41ac6f6b98f8e78968bdf01b1f3da3c4f9ae
+    fi
   fi
-fi
 
-if [ $is_docker == 0 ]; then
-	usermod -a -G vboxusers "$SUDO_USER"
+  if [ $is_docker == 0 ]; then
+  	usermod -a -G vboxusers "$SUDO_USER"
+  fi
 fi
 
 # LibreOffice
@@ -584,26 +599,27 @@ elif [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
   apt-get install -y libpq5 libsqlite3-devel R-base R-devel R-doc-html
 fi
 
-rm -fv /etc/eepm/repack.d/rstudio.sh || true # hack: forget about RStudio in modern versions of eepm (>3.27.0-alt1)
+if [ "$rpm_arch" == "x86_64" ]; then
+  rm -fv /etc/eepm/repack.d/rstudio.sh || true # hack: forget about RStudio in modern versions of eepm (>3.27.0-alt1)
 
-cd /tmp
-if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then # for OpenSuSe 15
-  wget -c https://s3.amazonaws.com/rstudio-ide-build/desktop/opensuse15/x86_64/rstudio-2021.09.3-396-x86_64.rpm
-  epm install -y --repack /tmp/rstudio-2021.09.3-396-x86_64.rpm
-  ln -sf /usr/lib/rstudio/bin/rstudio /usr/local/bin/rstudio
-elif [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
-  # NOTE: installation of the latest possible version 2023.03.0-548 with pandoc 2.19.2 results in error
-  #       "/usr/lib/rstudio/resources/app/bin/rsession: symbol lookup error: /usr/lib/rstudio/resources/app/bin/rsession: undefined symbol: Rf_countContexts"
-  #       So we need to use modern version with Pandoc 3.2.
-  wget -c https://s3.amazonaws.com/rstudio-ide-build/electron/opensuse15/x86_64/rstudio-2024.12.1-563-x86_64.rpm
-  epm install -y --repack /tmp/rstudio-2024.12.1-563-x86_64.rpm
-fi
+  cd /tmp
+  if [[ "$ver" == "p9" || "$ver" == "p10" ]]; then # for OpenSuSe 15
+    wget -c https://s3.amazonaws.com/rstudio-ide-build/desktop/opensuse15/x86_64/rstudio-2021.09.3-396-x86_64.rpm
+    epm install -y --repack /tmp/rstudio-2021.09.3-396-x86_64.rpm
+    ln -sf /usr/lib/rstudio/bin/rstudio /usr/local/bin/rstudio
+  elif [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
+    # NOTE: installation of the latest possible version 2023.03.0-548 with pandoc 2.19.2 results in error
+    #       "/usr/lib/rstudio/resources/app/bin/rsession: symbol lookup error: /usr/lib/rstudio/resources/app/bin/rsession: undefined symbol: Rf_countContexts"
+    #       So we need to use modern version with Pandoc 3.2.
+    wget -c https://s3.amazonaws.com/rstudio-ide-build/electron/opensuse15/x86_64/rstudio-2024.12.1-563-x86_64.rpm
+    epm install -y --repack /tmp/rstudio-2024.12.1-563-x86_64.rpm
+  fi
 
-apt-get install --reinstall -y eepm
+  apt-get install --reinstall -y eepm
 
-if [ $is_docker == 0 ]; then
-	sudo -u "$SUDO_USER" -- mkdir -p ~/.config/rstudio
-	cat <<EOF > ~/.config/rstudio/rstudio-prefs.json 
+  if [ $is_docker == 0 ]; then
+    sudo -u "$SUDO_USER" -- mkdir -p ~/.config/rstudio
+    cat <<EOF > ~/.config/rstudio/rstudio-prefs.json
 {
     "check_for_updates": false,
     "pdf_previewer": "rstudio",
@@ -611,12 +627,12 @@ if [ $is_docker == 0 ]; then
     "submit_crash_reports": false
 }
 EOF
-	chown "$SUDO_USER": ~/.config/rstudio/rstudio-prefs.json
+    chown "$SUDO_USER": ~/.config/rstudio/rstudio-prefs.json
 
-	echo 'crash-handling-enabled="0"' | sudo -u "$SUDO_USER" -- tee ~/.config/rstudio/crash-handler.conf
-else
-	mkdir -p /etc/skel/.config/rstudio
-	cat <<EOF > /etc/skel/.config/rstudio/rstudio-prefs.json 
+    echo 'crash-handling-enabled="0"' | sudo -u "$SUDO_USER" -- tee ~/.config/rstudio/crash-handler.conf
+    else
+      mkdir -p /etc/skel/.config/rstudio
+      cat <<EOF > /etc/skel/.config/rstudio/rstudio-prefs.json
 {
     "check_for_updates": false,
     "pdf_previewer": "rstudio",
@@ -625,14 +641,21 @@ else
 }
 EOF
 
-  echo 'crash-handling-enabled="0"' > /etc/skel/.config/rstudio/crash-handler.conf
-fi
+      echo 'crash-handling-enabled="0"' > /etc/skel/.config/rstudio/crash-handler.conf
+    fi
 
-# Pandoc
-cd /tmp
-LATEST_PANDOC_DEB_URL="https://github.com/jgm/pandoc/releases/download/2.16.1/pandoc-2.16.1-1-amd64.deb"
-wget -c $LATEST_PANDOC_DEB_URL;
-epm install -y --repack /tmp/pandoc-2.16.1-1-amd64.deb
+    # Pandoc
+    cd /tmp
+    LATEST_PANDOC_DEB_URL="https://github.com/jgm/pandoc/releases/download/2.16.1/pandoc-2.16.1-1-amd64.deb"
+    wget -c $LATEST_PANDOC_DEB_URL;
+    epm install -y --repack /tmp/pandoc-2.16.1-1-amd64.deb
+elif [ "$(arch)" == "aarch64" ]; then
+    # Pandoc
+    cd /tmp
+    LATEST_PANDOC_DEB_URL="https://github.com/jgm/pandoc/releases/download/2.16.1/pandoc-2.16.1-1-arm64.deb"
+    wget -c $LATEST_PANDOC_DEB_URL;
+    epm install -y --repack /tmp/pandoc-2.16.1-1-arm64.deb
+fi
 
 # bookdown install for local user
 apt-get install -y rpm-build libssl-devel libcurl-devel libxml2-devel libcairo-devel gcc gcc-c++ libfribidi-devel libtiff-devel libjpeg-devel libgit2-devel libwebp-devel R-tcltk cmake
@@ -714,13 +737,17 @@ else
 fi
 
 # PlayOnLinux
-apt-get install -y i586-libGL i586-xorg-dri-{intel,nouveau,radeon,swrast} i586-libncurses i586-libunixODBC2 i586-wine curl p7zip playonlinux winetricks
+if [ "$rpm_arch" == "x86_64" ]; then
+  apt-get install -y i586-libGL i586-xorg-dri-{intel,nouveau,radeon,swrast} i586-libncurses i586-libunixODBC2 i586-wine curl p7zip playonlinux winetricks
+fi
 
 # Telegram
-if [ "$ver" == "p9" ]; then
-  apt-get install -y telegram-desktop
-elif [[ "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
-  epm play telegram
+if [ "$rpm_arch" == "x86_64" ]; then
+  if [ "$ver" == "p9" ]; then
+    apt-get install -y telegram-desktop
+  elif [[ "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
+    epm play telegram
+  fi
 fi
 
 # NotepadQQ
@@ -728,7 +755,7 @@ apt-get install -y notepadqq
 
 # Flatpak
 apt-get install -y flatpak
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
 control fusermount wheelonly
 if [ "$ver" == "p9" ]; then
     chmod a+x /etc/profile.d/flatpak.sh || true
@@ -813,33 +840,35 @@ fi
 
 apt-get install -y fritzing
 
-# Scilab from official site
-#scilab_ver=5.5.2 # segfaults, broken
-#scilab_ver=6.1.1 # runs normally, no Coselica in ATOMS
-scilab_ver=6.0.2
-cd /tmp
-wget -c https://oos.eu-west-2.outscale.com/scilab-releases/${scilab_ver}/scilab-${scilab_ver}.bin.linux-x86_64.tar.gz
-cd /opt
-tar -xzf /tmp/scilab-${scilab_ver}.bin.linux-x86_64.tar.gz
-cd scilab-${scilab_ver}
-ln -sf /opt/scilab-${scilab_ver}/bin/XML2Modelica /usr/local/bin/XML2Modelica
-ln -sf /opt/scilab-${scilab_ver}/bin/scilab-bin /usr/local/bin/scilab-bin
-ln -sf /opt/scilab-${scilab_ver}/bin/modelicac /usr/local/bin/modelicac
-ln -sf /opt/scilab-${scilab_ver}/bin/scilab /usr/local/bin/scilab
-ln -sf /opt/scilab-${scilab_ver}/bin/scinotes /usr/local/bin/scinotes
-ln -sf /opt/scilab-${scilab_ver}/bin/xcos /usr/local/bin/xcos
-ln -sf /opt/scilab-${scilab_ver}/bin/scilab-cli-bin /usr/local/bin/scilab-cli-bin
-ln -sf /opt/scilab-${scilab_ver}/bin/modelicat /usr/local/bin/modelicat
+if [ "$rpm_arch" == "x86_64" ]; then
+  # Scilab from official site
+  #scilab_ver=5.5.2 # segfaults, broken
+  #scilab_ver=6.1.1 # runs normally, no Coselica in ATOMS
+  scilab_ver=6.0.2
+  cd /tmp
+  wget -c https://oos.eu-west-2.outscale.com/scilab-releases/${scilab_ver}/scilab-${scilab_ver}.bin.linux-x86_64.tar.gz
+  cd /opt
+  tar -xzf /tmp/scilab-${scilab_ver}.bin.linux-x86_64.tar.gz
+  cd scilab-${scilab_ver}
+  ln -sf /opt/scilab-${scilab_ver}/bin/XML2Modelica /usr/local/bin/XML2Modelica
+  ln -sf /opt/scilab-${scilab_ver}/bin/scilab-bin /usr/local/bin/scilab-bin
+  ln -sf /opt/scilab-${scilab_ver}/bin/modelicac /usr/local/bin/modelicac
+  ln -sf /opt/scilab-${scilab_ver}/bin/scilab /usr/local/bin/scilab
+  ln -sf /opt/scilab-${scilab_ver}/bin/scinotes /usr/local/bin/scinotes
+  ln -sf /opt/scilab-${scilab_ver}/bin/xcos /usr/local/bin/xcos
+  ln -sf /opt/scilab-${scilab_ver}/bin/scilab-cli-bin /usr/local/bin/scilab-cli-bin
+  ln -sf /opt/scilab-${scilab_ver}/bin/modelicat /usr/local/bin/modelicat
 
-mkdir -p /usr/local/share/applications
-cp -avrfu share/{icons,applications,mime} /usr/local/share/
-update-mime-database /usr/local/share/mime/
-update-menus
+  mkdir -p /usr/local/share/applications
+  cp -avrfu share/{icons,applications,mime} /usr/local/share/
+  update-mime-database /usr/local/share/mime/
+  update-menus
 
-# use MATE desktop with Ayatana indicators on p11 and Sisyphus
-if [[ $is_docker == 0 && "$DESKTOP_SESSION" == "mate" ]]; then
-  if [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
-    apt-get install --reinstall -y alt-mate-ayatana-settings
+  # use MATE desktop with Ayatana indicators on p11 and Sisyphus
+  if [[ $is_docker == 0 && "$DESKTOP_SESSION" == "mate" ]]; then
+    if [[ "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
+      apt-get install --reinstall -y alt-mate-ayatana-settings
+    fi
   fi
 fi
 
