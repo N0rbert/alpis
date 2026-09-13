@@ -107,6 +107,13 @@ elif [ "$ver" == "Sisyphus" ]; then
   apt-repo add "$(apt-repo | grep Sisyphus | grep 'noarch ' | sed 's/^rpm /rpm-src /' | sed 's/\[alt\]//' | sort -u | head -n1)"
 
   sed -i "s| pub/distributions/ALTLinux|/pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+  sed -i "s|/pub/distributions/ALTLinux /Sisyphus|/pub/distributions ALTLinux/Sisyphus|g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+
+  tmp_list=$(mktemp)
+  grep "^#" /etc/apt/sources.list | tee "$tmp_list"
+  grep -v "^#" /etc/apt/sources.list | sort -u | tee -a "$tmp_list"
+  mv -vf "$tmp_list" /etc/apt/sources.list
+  chmod a+r /etc/apt/sources.list
 
   if [ "$rpm_arch" == "loongarch64" ]; then
     sed -i "s|pub distributions/ALTLinux|pub/distributions/ALTLinux |g" /etc/apt/sources.list /etc/apt/sources.list.d/*.list
