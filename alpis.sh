@@ -761,7 +761,7 @@ if [ "$rpm_arch" == "x86_64" ]; then
   if [ "$ver" == "p9" ]; then
     apt-get install -y telegram-desktop
   elif [[ "$ver" == "p10" || "$ver" == "p11" || "$ver" == "Sisyphus" ]]; then
-    epm play telegram
+    epm play telegram || true
   fi
 fi
 
